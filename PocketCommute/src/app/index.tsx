@@ -1,21 +1,22 @@
-import React from 'react';
-import MapView from 'react-native-maps';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function App() {
+import {Text} from 'react-native';
+
+export default function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <MapView style={styles.map} />
-    </View>
+      <SafeAreaView style={styles.safeArea}>
+        <Text>
+          ROUTE OPTIMIZATION SCREEN
+        </Text>
+      </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-  },
-  map: {
-    width: '100%',
-    height: '100%',
-  },
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
 });
