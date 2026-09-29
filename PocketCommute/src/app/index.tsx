@@ -1,14 +1,18 @@
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import {Text} from 'react-native';
+import { Searchbar, Text } from 'react-native-paper';
+import { useState } from 'react';
 
 export default function HomeScreen() {
+  const [search, setSearch] = useState('');
+
   return (
       <SafeAreaView style={styles.safeArea}>
-        <Text>
-          ROUTE OPTIMIZATION SCREEN
-        </Text>
+        <Searchbar
+          placeholder="Search"
+          onChangeText={setSearch}
+          value={search}
+        />
       </SafeAreaView>
   );
 }
@@ -16,7 +20,5 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
+  },
 });
