@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 export default {
   expo: {
     name: "PocketCommute",
@@ -6,7 +8,11 @@ export default {
     orientation: "portrait",
     scheme: "pocketcommute",
     userInterfaceStyle: "automatic",
-
+    
+    "android": {
+      "package": "com.anonymous.PocketCommute"
+    },
+    
     plugins: [
       "expo-router",
       "expo-splash-screen",

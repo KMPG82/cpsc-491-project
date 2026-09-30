@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo/ui": "~57.0.21",
     "@react-native-vector-icons/material-design-icons": "^13.1.4",
+    "dotenv": "^18.0.5",
     "expo": "~57.0.26",
     "expo-constants": "~57.0.19",
     "expo-device": "~57.0.2",
