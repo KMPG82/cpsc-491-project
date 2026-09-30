@@ -6,6 +6,7 @@ import { useState } from 'react';
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
 
+  //use portal and modal component
   return (
       <SafeAreaView style={styles.safeArea}>
         <Searchbar
