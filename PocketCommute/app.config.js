@@ -10,7 +10,8 @@ export default {
     userInterfaceStyle: "automatic",
     
     "android": {
-      "package": "com.anonymous.PocketCommute"
+      "package": "com.anonymous.PocketCommute",
+      "gradleArguments": ["--no-build-cache"]
     },
     
     plugins: [
