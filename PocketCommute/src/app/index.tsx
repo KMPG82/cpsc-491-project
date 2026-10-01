@@ -6,8 +6,8 @@ import { useState } from 'react';
 
 export default function App() {
   const [search, setSearch] = useState('');
-
   const [preferences, setPreferences] = useState(false);
+  
   const showPreferences = () => setPreferences(true);
   const hidePreferences = () => setPreferences(false);
 
