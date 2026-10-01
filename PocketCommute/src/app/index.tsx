@@ -1,31 +1,52 @@
-import React from 'react';
 import MapView from 'react-native-maps';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Searchbar } from 'react-native-paper';
+import { Button, Searchbar, Text, IconButton, Portal, Modal, PaperProvider } from 'react-native-paper';
 import { useState } from 'react';
 
 export default function App() {
   const [search, setSearch] = useState('');
 
-  return (
-       <SafeAreaView style={styles.safeArea}>
-         <Searchbar
-           placeholder="Search"
-           onChangeText={setSearch}
-           value={search}
-           style={styles.searchBar}
-         />
-        <MapView style={styles.map} />
+  const [preferences, setPreferences] = useState(false);
+  const showPreferences = () => setPreferences(true);
+  const hidePreferences = () => setPreferences(false);
 
+  return (
+    <PaperProvider>
+       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.topBar}>
+          <IconButton
+            icon="dots-vertical"
+            size={28}
+            onPress={() => showPreferences()}
+          />
+
+          <Searchbar
+            placeholder="Search"
+            onChangeText={setSearch}
+            value={search}
+            style={styles.searchBar}
+          />
+
+          <Button mode="contained" onPress={() => console.log('Hello, World')}>
+            Confirm
+          </Button>
+
+          <Portal>
+            <Modal visible={preferences} onDismiss={hidePreferences} contentContainerStyle={styles.preferencesModal}>
+              <Text>Preferences</Text>
+            </Modal>
+          </Portal>
+        </View>
+
+        <MapView style={styles.map} />
        </SafeAreaView>
+    </PaperProvider>
+
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   map: {
     width: '100%',
     height: '100%',
@@ -33,7 +54,20 @@ const styles = StyleSheet.create({
   safeArea: {
      flex: 1,
    },
-   searchBar:{
-    paddingBottom: 20,
+   topBar:{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    paddingBottom: 5, 
+   },
+   searchBar: {
+    flex: 1,
+    marginRight: 5,
+   },
+   preferencesModal: {
+    backgroundColor: 'white',
+    padding: 20,
+    height: '50%',
    }
 });
