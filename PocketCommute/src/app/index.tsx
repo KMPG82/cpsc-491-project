@@ -16,14 +16,14 @@ import { useState } from "react";
 
 export default function App() {
   const [search, setSearch] = useState("");
-  const [settings, setSettings] = useState(false);
-  const [mode, setMode] = useState("Drive");
-  const [preference, setPreference] = useState("time");
+  const [preferences, setPreferences] = useState(false);
+  const [mode, setMode] = useState("drive");
+  const [priority, setPriority] = useState("time");
   const [avoidHighways, setAvoidHighways] = useState(false);
   const [avoidTolls, setAvoidTolls] = useState(false);
 
-  const showSettings = () => setSettings(true);
-  const hideSettings = () => setSettings(false);
+  const showPreferences = () => setPreferences(true);
+  const hidePreferences = () => setPreferences(false);
 
   return (
     <PaperProvider>
@@ -32,7 +32,7 @@ export default function App() {
           <IconButton
             icon="dots-vertical"
             size={28}
-            onPress={() => showSettings()}
+            onPress={() => showPreferences()}
           />
 
           <Searchbar
@@ -42,91 +42,124 @@ export default function App() {
             style={styles.searchBar}
           />
 
-          <Button mode="contained" onPress={() => console.log("Hello, World")}>
+          <Button
+            mode="contained"
+            onPress={() =>
+              console.log(
+                "Preferences:",
+                priority,
+                mode,
+                avoidHighways,
+                avoidTolls,
+                search,
+              )
+            }
+          >
             Confirm
           </Button>
 
           <Portal>
             <Modal
-              visible={settings}
-              onDismiss={hideSettings}
-              contentContainerStyle={styles.settingsModal}
+              visible={preferences}
+              onDismiss={hidePreferences}
+              contentContainerStyle={styles.preferencesModal}
             >
-              <View style={styles.settingsContainer}>
-                <RadioButton.Group
-                  onValueChange={(newValue) => setMode(newValue)}
-                  value={mode}
-                >
-                  <View style={styles.optionsContainer}>
-                    <View style={styles.option}>
-                      <Text>Walk</Text>
-                      <RadioButton value="Walk" />
-                    </View>
+              <View style={styles.preferencesParentContainer}>
+                <Text variant="titleLarge" style={styles.preferencesTitle}>
+                  Mode of Transportation
+                </Text>
+                <View style={styles.preferencesContainer}>
+                  <RadioButton.Group
+                    onValueChange={(newValue) => {
+                      setMode(newValue);
+                      console.log(newValue);
+                    }}
+                    value={mode}
+                  >
+                    <View style={styles.optionsContainer}>
+                      <View style={styles.option}>
+                        <Text style={styles.optionsText}>Walk</Text>
+                        <RadioButton value="walk" />
+                      </View>
 
-                    <View style={styles.option}>
-                      <Text>Bike</Text>
-                      <RadioButton value="Bike" />
-                    </View>
+                      <View style={styles.option}>
+                        <Text style={styles.optionsText}>Bike</Text>
+                        <RadioButton value="bike" />
+                      </View>
 
-                    <View style={styles.option}>
-                      <Text>Drive</Text>
-                      <RadioButton value="Drive" />
+                      <View style={styles.option}>
+                        <Text style={styles.optionsText}>Drive</Text>
+                        <RadioButton value="drive" />
+                      </View>
                     </View>
-                  </View>
-                </RadioButton.Group>
+                  </RadioButton.Group>
+                </View>
               </View>
 
-              <View style={styles.settingsContainer}>
-                <RadioButton.Group
-                  onValueChange={(newValue) => setPreference(newValue)}
-                  value={preference}
-                >
-                  <View style={styles.optionsContainer}>
-                    <View style={styles.option}>
-                      <Text>Time</Text>
-                      <RadioButton value="time" />
-                    </View>
+              <View style={styles.preferencesParentContainer}>
+                <Text variant="titleLarge" style={styles.preferencesTitle}>
+                  Priority
+                </Text>
+                <View style={styles.preferencesContainer}>
+                  <RadioButton.Group
+                    onValueChange={(newValue) => {
+                      setPriority(newValue);
+                      console.log(newValue);
+                    }}
+                    value={priority}
+                  >
+                    <View style={styles.optionsContainer}>
+                      <View style={styles.option}>
+                        <Text style={styles.optionsText}>Time</Text>
+                        <RadioButton value="time" />
+                      </View>
 
-                    <View style={styles.option}>
-                      <Text>Distance</Text>
-                      <RadioButton value="distance" />
-                    </View>
+                      <View style={styles.option}>
+                        <Text style={styles.optionsText}>Distance</Text>
+                        <RadioButton value="distance" />
+                      </View>
 
-                    <View style={styles.option}>
-                      <Text>Fuel Consumption</Text>
-                      <RadioButton value="fuel" />
-                    </View>
+                      <View style={styles.option}>
+                        <Text style={styles.optionsText}>Steps</Text>
+                        <RadioButton value="steps" />
+                      </View>
 
-                    <View style={styles.option}>
-                      <Text>Steps</Text>
-                      <RadioButton value="steps" />
+                      <View style={styles.option}>
+                        <Text style={styles.optionsText}>Fuel</Text>
+                        <RadioButton value="fuel" />
+                      </View>
                     </View>
-                  </View>
-                </RadioButton.Group>
+                  </RadioButton.Group>
+                </View>
               </View>
 
-              <View style={styles.settingsContainer}>
-                <View style={styles.optionsContainer}>
-                  <View style={styles.option}>
-                    <Text>Avoid Highways</Text>
+              <View style={styles.preferencesParentContainer}>
+                <Text variant="titleLarge" style={styles.preferencesTitle}>
+                  Highway/Toll Avoidance
+                </Text>
+                <View style={styles.preferencesContainer}>
+                  <View style={styles.optionsContainer}>
+                    <View style={styles.option}>
+                      <Text style={styles.optionsText}>Avoid Highways</Text>
+                      <Checkbox
+                        status={avoidHighways ? "checked" : "unchecked"}
+                        onPress={() => {
+                          setAvoidHighways(!avoidHighways);
+                          console.log(!avoidHighways);
+                        }}
+                      />
+                    </View>
 
-                    <Checkbox
-                      status={avoidHighways ? "checked" : "unchecked"}
-                      onPress={() => {
-                        setAvoidHighways(!avoidHighways);
-                      }}
-                    />
-                  </View>
-
-                  <View style={styles.option}>
-                    <Text>Avoid Tolls</Text>
-
-                    <Checkbox
-                      status={avoidTolls ? "checked" : "unchecked"}
-                      onPress={() => {
-                        setAvoidTolls(!avoidTolls);
-                      }}
-                    />
+                    <View style={styles.option}>
+                      <Text style={styles.optionsText}>Avoid Tolls</Text>
+                      <Checkbox
+                        status={avoidTolls ? "checked" : "unchecked"}
+                        onPress={() => {
+                          setAvoidTolls(!avoidTolls);
+                          console.log(!avoidTolls);
+                        }}
+                      />
+                    </View>
                   </View>
                 </View>
               </View>
@@ -159,15 +192,14 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 5,
   },
-  settingsModal: {
+  preferencesModal: {
     backgroundColor: "white",
     height: "70%",
   },
-  settingsContainer: {
+  preferencesContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     flex: 1,
-    borderWidth: 1,
+    //borderWidth: 1,
   },
   optionsContainer: {
     flexDirection: "row",
@@ -175,11 +207,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flex: 1,
     width: "100%",
-    borderWidth: 1,
+    paddingHorizontal: 10,
+    //borderWidth: 1,
   },
   option: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  preferencesParentContainer: {
+    flex: 1,
+    flexDirection: "column",
     borderWidth: 1,
+    alignItems: "center",
+  },
+  optionsText: {
+    fontSize: 16,
+  },
+  preferencesTitle: {
+    fontWeight: "bold",
+    paddingTop: 5,
   },
 });
