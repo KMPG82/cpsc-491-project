@@ -23,6 +23,12 @@ export default {
           androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
         },
       ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
     ],
 
     experiments: {
