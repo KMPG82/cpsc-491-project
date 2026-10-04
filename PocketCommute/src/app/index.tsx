@@ -12,7 +12,9 @@ import {
   RadioButton,
   Checkbox,
 } from "react-native-paper";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import * as Location from "expo-location";
 
 export default function App() {
   const [search, setSearch] = useState("");
@@ -21,9 +23,37 @@ export default function App() {
   const [priority, setPriority] = useState("time");
   const [avoidHighways, setAvoidHighways] = useState(false);
   const [avoidTolls, setAvoidTolls] = useState(false);
-
   const showPreferences = () => setPreferences(true);
   const hidePreferences = () => setPreferences(false);
+
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function getCurrentLocation() {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+      });
+      setLocation(location);
+    }
+
+    getCurrentLocation();
+  }, []);
+
+  let text = "Waiting...";
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+  }
 
   return (
     <PaperProvider>
@@ -52,6 +82,8 @@ export default function App() {
                 avoidHighways,
                 avoidTolls,
                 search,
+                location?.coords.latitude,
+                location?.coords.longitude,
               )
             }
           >
@@ -68,6 +100,7 @@ export default function App() {
                 <Text variant="titleLarge" style={styles.preferencesTitle}>
                   Mode of Transportation
                 </Text>
+
                 <View style={styles.preferencesContainer}>
                   <RadioButton.Group
                     onValueChange={(newValue) => {
