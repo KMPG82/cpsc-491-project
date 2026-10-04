@@ -1,4 +1,4 @@
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
@@ -49,7 +49,7 @@ export default function App() {
     };
 
     return fetch(
-      `https://api.geoapify.com/v2/places?categories=commercial&filter=circle:${longitude},${latitude},5000&bias=proximity:${longitude},${latitude}&limit=20&apiKey=${GEOAPIFY_KEY}`,
+      `https://api.geoapify.com/v2/places?categories=commercial,catering&filter=circle:${longitude},${latitude},5000&bias=proximity:${longitude},${latitude}&limit=40&apiKey=${GEOAPIFY_KEY}`,
       requestOptions,
     )
       .then((response) => response.json())
@@ -257,11 +257,40 @@ export default function App() {
           initialRegion={{
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
-            latitudeDelta: 0,
-            longitudeDelta: 0,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
           }}
           showsUserLocation={true}
-        />
+        >
+          {nearbyPlaces &&
+            nearbyPlaces.map((place, index) => {
+              const latitude = place?.properties?.lat;
+              const longitude = place?.properties?.lon;
+              const name = place?.properties?.name;
+              const address = place?.properties?.address_line2;
+
+              if (
+                !latitude ||
+                !longitude ||
+                !name?.trim() ||
+                !address?.trim()
+              ) {
+                return null;
+              }
+
+              return (
+                <Marker
+                  key={index}
+                  coordinate={{
+                    latitude: latitude,
+                    longitude: longitude,
+                  }}
+                  title={name}
+                  description={address}
+                />
+              );
+            })}
+        </MapView>
       </SafeAreaView>
     </PaperProvider>
   );
