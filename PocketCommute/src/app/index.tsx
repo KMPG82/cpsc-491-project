@@ -1,7 +1,6 @@
 import MapView, { Marker } from "react-native-maps";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Constants from "expo-constants";
 import {
   Button,
   Searchbar,
@@ -17,6 +16,8 @@ import {
 import { useState, useEffect } from "react";
 
 import * as Location from "expo-location";
+
+import { getCurrentLocation } from "../utilities/getCurrentLocation";
 
 //landing screen: contains search bar, map, and preferences selection
 export default function App() {
@@ -37,51 +38,13 @@ export default function App() {
   const [loadingNearbyPlaces, setLoadingNearbyPlaces] =
     useState<boolean>(false);
 
-  //fetch nearby places using Geoapify Places API
-  async function getNearbyPlaces(latitude: number, longitude: number) {
-    setLoadingNearbyPlaces(true);
-
-    const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
-
-    //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/places/
-    const requestOptions = {
-      method: "GET",
-    };
-
-    return fetch(
-      `https://api.geoapify.com/v2/places?categories=commercial,catering&filter=circle:${longitude},${latitude},5000&bias=proximity:${longitude},${latitude}&limit=40&apiKey=${GEOAPIFY_KEY}`,
-      requestOptions,
-    )
-      .then((response) => response.json())
-      .then((result) => {
-        setNearbyPlaces(result.features || []);
-      })
-      .catch((error) => console.log("error", error));
-  }
-
-  //get the user's current location and call getNearbyPlaces
-  async function getCurrentLocation() {
-    //used example from Expo Location documentation as reference: https://docs.expo.dev/versions/latest/sdk/location/
-    let { status } = await Location.requestForegroundPermissionsAsync();
-
-    if (status !== "granted") {
-      setErrorMsg("Permission to access location was denied");
-      return;
-    }
-
-    let location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-
-    setLocation(location);
-
-    await getNearbyPlaces(location.coords.latitude, location.coords.longitude);
-
-    setLoadingNearbyPlaces(false);
-  }
-
   useEffect(() => {
-    getCurrentLocation();
+    getCurrentLocation(
+      setLocation,
+      setErrorMsg,
+      setNearbyPlaces,
+      setLoadingNearbyPlaces,
+    );
   }, []);
 
   let text = "Waiting...";
@@ -92,7 +55,7 @@ export default function App() {
   }
 
   //show loading indicator while fetching location and nearby places
-  if (!location || !location.coords || !nearbyPlaces) {
+  if (!location || loadingNearbyPlaces) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
