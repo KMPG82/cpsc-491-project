@@ -35,5 +35,9 @@ export default {
       typedRoutes: true,
       reactCompiler: true,
     },
+
+    extra: {
+      geoapifyApiKey: process.env.GEOAPIFY_API_KEY,
+    },
   },
 };

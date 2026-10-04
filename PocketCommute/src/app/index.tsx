@@ -1,6 +1,7 @@
 import MapView from "react-native-maps";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 import {
   Button,
   Searchbar,
@@ -11,11 +12,13 @@ import {
   PaperProvider,
   RadioButton,
   Checkbox,
+  ActivityIndicator,
 } from "react-native-paper";
 import { useState, useEffect } from "react";
 
 import * as Location from "expo-location";
 
+//landing screen: contains search bar, map, and preferences selection
 export default function App() {
   const [search, setSearch] = useState("");
   const [preferences, setPreferences] = useState(false);
@@ -30,21 +33,54 @@ export default function App() {
     null,
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
+  const [loadingNearbyPlaces, setLoadingNearbyPlaces] =
+    useState<boolean>(false);
 
-  useEffect(() => {
-    async function getCurrentLocation() {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
-      }
+  //fetch nearby places using Geoapify Places API
+  async function getNearbyPlaces(latitude: number, longitude: number) {
+    setLoadingNearbyPlaces(true);
 
-      let location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
-      });
-      setLocation(location);
+    const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
+
+    //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/places/
+    const requestOptions = {
+      method: "GET",
+    };
+
+    return fetch(
+      `https://api.geoapify.com/v2/places?categories=commercial&filter=circle:${longitude},${latitude},5000&bias=proximity:${longitude},${latitude}&limit=20&apiKey=${GEOAPIFY_KEY}`,
+      requestOptions,
+    )
+      .then((response) => response.json())
+      .then((result) => {
+        setNearbyPlaces(result.features || []);
+      })
+      .catch((error) => console.log("error", error));
+  }
+
+  //get the user's current location and call getNearbyPlaces
+  async function getCurrentLocation() {
+    //used example from Expo Location documentation as reference: https://docs.expo.dev/versions/latest/sdk/location/
+    let { status } = await Location.requestForegroundPermissionsAsync();
+
+    if (status !== "granted") {
+      setErrorMsg("Permission to access location was denied");
+      return;
     }
 
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+
+    setLocation(location);
+
+    await getNearbyPlaces(location.coords.latitude, location.coords.longitude);
+
+    setLoadingNearbyPlaces(false);
+  }
+
+  useEffect(() => {
     getCurrentLocation();
   }, []);
 
@@ -55,6 +91,19 @@ export default function App() {
     text = JSON.stringify(location);
   }
 
+  //show loading indicator while fetching location and nearby places
+  if (!location || !location.coords || !nearbyPlaces) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  //show map with markers for nearby places, search bar, preferences button, and confirm button
   return (
     <PaperProvider>
       <SafeAreaView style={styles.safeArea}>
@@ -170,10 +219,12 @@ export default function App() {
                 <Text variant="titleLarge" style={styles.preferencesTitle}>
                   Highway/Toll Avoidance
                 </Text>
+
                 <View style={styles.preferencesContainer}>
                   <View style={styles.optionsContainer}>
                     <View style={styles.option}>
                       <Text style={styles.optionsText}>Avoid Highways</Text>
+
                       <Checkbox
                         status={avoidHighways ? "checked" : "unchecked"}
                         onPress={() => {
@@ -185,6 +236,7 @@ export default function App() {
 
                     <View style={styles.option}>
                       <Text style={styles.optionsText}>Avoid Tolls</Text>
+
                       <Checkbox
                         status={avoidTolls ? "checked" : "unchecked"}
                         onPress={() => {
@@ -200,12 +252,22 @@ export default function App() {
           </Portal>
         </View>
 
-        <MapView style={styles.map} />
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            latitudeDelta: 0,
+            longitudeDelta: 0,
+          }}
+          showsUserLocation={true}
+        />
       </SafeAreaView>
     </PaperProvider>
   );
 }
 
+//styling
 const styles = StyleSheet.create({
   map: {
     width: "100%",
@@ -232,7 +294,6 @@ const styles = StyleSheet.create({
   preferencesContainer: {
     flexDirection: "row",
     flex: 1,
-    //borderWidth: 1,
   },
   optionsContainer: {
     flexDirection: "row",
@@ -241,7 +302,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     paddingHorizontal: 10,
-    //borderWidth: 1,
   },
   option: {
     flexDirection: "row",
@@ -259,5 +319,10 @@ const styles = StyleSheet.create({
   preferencesTitle: {
     fontWeight: "bold",
     paddingTop: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
