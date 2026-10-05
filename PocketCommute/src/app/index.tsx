@@ -13,9 +13,10 @@ import {
   Checkbox,
   ActivityIndicator,
 } from "react-native-paper";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import * as Location from "expo-location";
+import Constants from "expo-constants";
 
 import { getCurrentLocation } from "../utilities/getCurrentLocation";
 
@@ -34,16 +35,45 @@ export default function App() {
     null,
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
-  const [loadingNearbyPlaces, setLoadingNearbyPlaces] =
+  const [loadingLocationAndNearbyPlaces, setLoadingLocationAndNearbyPlaces] =
     useState<boolean>(false);
+
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  //fetch suggestions for search query
+  async function getSuggestions(searchQuery: string) {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
+
+    //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/places/
+    const requestOptions = {
+      method: "GET",
+    };
+
+    fetch(
+      `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&limit=1&bias=proximity:${location?.coords.longitude},${location?.coords.latitude}&apiKey=${GEOAPIFY_KEY}`,
+      requestOptions,
+    )
+      .then((response) => response.json())
+      //.then((result) => setSuggestions(result.features || []))
+      .then((result) => console.log("Suggestions:", result.features || []))
+
+      .catch((error) => console.log("error", error));
+  }
 
   useEffect(() => {
     getCurrentLocation(
       setLocation,
       setErrorMsg,
       setNearbyPlaces,
-      setLoadingNearbyPlaces,
+      setLoadingLocationAndNearbyPlaces,
     );
   }, []);
 
@@ -55,7 +85,7 @@ export default function App() {
   }
 
   //show loading indicator while fetching location and nearby places
-  if (!location || loadingNearbyPlaces) {
+  if (!location || loadingLocationAndNearbyPlaces) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
@@ -79,7 +109,17 @@ export default function App() {
 
           <Searchbar
             placeholder="Search"
-            onChangeText={setSearch}
+            onChangeText={(text) => {
+              setSearch(text);
+
+              if (timer.current) {
+                clearTimeout(timer.current);
+              }
+
+              timer.current = setTimeout(() => {
+                getSuggestions(text);
+              }, 500);
+            }}
             value={search}
             style={styles.searchBar}
           />

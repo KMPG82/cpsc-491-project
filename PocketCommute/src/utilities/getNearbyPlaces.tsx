@@ -5,10 +5,7 @@ export async function getNearbyPlaces(
   latitude: number,
   longitude: number,
   setNearbyPlaces: (places: any[]) => void,
-  setLoadingNearbyPlaces: (loading: boolean) => void,
 ) {
-  setLoadingNearbyPlaces(true);
-
   const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
 
   //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/places/
