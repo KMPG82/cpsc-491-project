@@ -1,5 +1,5 @@
 import MapView, { Marker } from "react-native-maps";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
@@ -26,6 +26,7 @@ export default function App() {
   const [preferences, setPreferences] = useState(false);
   const [mode, setMode] = useState("drive");
   const [priority, setPriority] = useState("time");
+  const [isDriving, setIsDriving] = useState(true);
   const [avoidHighways, setAvoidHighways] = useState(false);
   const [avoidTolls, setAvoidTolls] = useState(false);
   const showPreferences = () => setPreferences(true);
@@ -43,6 +44,8 @@ export default function App() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [destination, setDestination] = useState<any | null>(null);
+
   //fetch suggestions for search query
   async function getSuggestions(searchQuery: string) {
     if (!searchQuery.trim()) {
@@ -58,13 +61,11 @@ export default function App() {
     };
 
     fetch(
-      `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&limit=1&bias=proximity:${location?.coords.longitude},${location?.coords.latitude}&apiKey=${GEOAPIFY_KEY}`,
+      `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&limit=5&bias=proximity:${location?.coords.longitude},${location?.coords.latitude}&apiKey=${GEOAPIFY_KEY}`,
       requestOptions,
     )
       .then((response) => response.json())
-      //.then((result) => setSuggestions(result.features || []))
-      .then((result) => console.log("Suggestions:", result.features || []))
-
+      .then((result) => setSuggestions(result.features || []))
       .catch((error) => console.log("error", error));
   }
 
@@ -107,22 +108,51 @@ export default function App() {
             onPress={() => showPreferences()}
           />
 
-          <Searchbar
-            placeholder="Search"
-            onChangeText={(text) => {
-              setSearch(text);
+          <View style={styles.searchBar}>
+            <Searchbar
+              placeholder="Search"
+              onChangeText={(text) => {
+                setSearch(text);
 
-              if (timer.current) {
-                clearTimeout(timer.current);
-              }
+                if (timer.current) {
+                  clearTimeout(timer.current);
+                }
 
-              timer.current = setTimeout(() => {
-                getSuggestions(text);
-              }, 500);
-            }}
-            value={search}
-            style={styles.searchBar}
-          />
+                timer.current = setTimeout(() => {
+                  getSuggestions(text);
+                }, 500);
+              }}
+              value={search}
+            />
+
+            {suggestions.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                {suggestions.map((suggestion, index) => (
+                  <Pressable
+                    key={index}
+                    style={styles.suggestion}
+                    onPress={() => {
+                      setDestination(suggestion);
+
+                      setSearch(suggestion.properties?.name || "");
+
+                      setSuggestions([]);
+
+                      console.log("Selected destination:", suggestion);
+                    }}
+                  >
+                    <Text variant="bodyLarge">
+                      {suggestion.properties?.name}
+                    </Text>
+
+                    <Text variant="bodySmall">
+                      {suggestion.properties?.address_line2}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </View>
 
           <Button
             mode="contained"
@@ -136,6 +166,7 @@ export default function App() {
                 search,
                 location?.coords.latitude,
                 location?.coords.longitude,
+                destination,
               )
             }
           >
@@ -157,23 +188,24 @@ export default function App() {
                   <RadioButton.Group
                     onValueChange={(newValue) => {
                       setMode(newValue);
+                      setIsDriving(newValue === "drive");
                       console.log(newValue);
                     }}
                     value={mode}
                   >
                     <View style={styles.optionsContainer}>
                       <View style={styles.option}>
-                        <Text style={styles.optionsText}>Walk</Text>
+                        <Text variant="bodyLarge">Walk</Text>
                         <RadioButton value="walk" />
                       </View>
 
                       <View style={styles.option}>
-                        <Text style={styles.optionsText}>Bike</Text>
+                        <Text variant="bodyLarge">Bike</Text>
                         <RadioButton value="bike" />
                       </View>
 
                       <View style={styles.option}>
-                        <Text style={styles.optionsText}>Drive</Text>
+                        <Text variant="bodyLarge">Drive</Text>
                         <RadioButton value="drive" />
                       </View>
                     </View>
@@ -195,23 +227,23 @@ export default function App() {
                   >
                     <View style={styles.optionsContainer}>
                       <View style={styles.option}>
-                        <Text style={styles.optionsText}>Time</Text>
+                        <Text variant="bodyLarge">Time</Text>
                         <RadioButton value="time" />
                       </View>
 
                       <View style={styles.option}>
-                        <Text style={styles.optionsText}>Distance</Text>
+                        <Text variant="bodyLarge">Distance</Text>
                         <RadioButton value="distance" />
                       </View>
 
                       <View style={styles.option}>
-                        <Text style={styles.optionsText}>Steps</Text>
+                        <Text variant="bodyLarge">Steps</Text>
                         <RadioButton value="steps" />
                       </View>
 
                       <View style={styles.option}>
-                        <Text style={styles.optionsText}>Fuel</Text>
-                        <RadioButton value="fuel" />
+                        <Text variant="bodyLarge">Fuel</Text>
+                        <RadioButton value="fuel" disabled={!isDriving} />
                       </View>
                     </View>
                   </RadioButton.Group>
@@ -226,9 +258,10 @@ export default function App() {
                 <View style={styles.preferencesContainer}>
                   <View style={styles.optionsContainer}>
                     <View style={styles.option}>
-                      <Text style={styles.optionsText}>Avoid Highways</Text>
+                      <Text variant="bodyLarge">Avoid Highways</Text>
 
                       <Checkbox
+                        disabled={!isDriving}
                         status={avoidHighways ? "checked" : "unchecked"}
                         onPress={() => {
                           setAvoidHighways(!avoidHighways);
@@ -238,9 +271,10 @@ export default function App() {
                     </View>
 
                     <View style={styles.option}>
-                      <Text style={styles.optionsText}>Avoid Tolls</Text>
+                      <Text variant="bodyLarge">Avoid Tolls</Text>
 
                       <Checkbox
+                        disabled={!isDriving}
                         status={avoidTolls ? "checked" : "unchecked"}
                         onPress={() => {
                           setAvoidTolls(!avoidTolls);
@@ -345,9 +379,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
   },
-  optionsText: {
-    fontSize: 16,
-  },
   preferencesTitle: {
     fontWeight: "bold",
     paddingTop: 5,
@@ -356,5 +387,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  suggestionsContainer: {
+    position: "absolute",
+    top: 60,
+    backgroundColor: "white",
+    elevation: 10,
+    zIndex: 1,
+  },
+  suggestion: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#999999",
   },
 });
