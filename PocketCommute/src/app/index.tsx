@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
 } from "react-native-paper";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "expo-router";
 
 import * as Location from "expo-location";
 
@@ -45,6 +46,8 @@ export default function App() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [destination, setDestination] = useState<any | null>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     getCurrentLocation(
@@ -138,7 +141,8 @@ export default function App() {
 
           <Button
             mode="contained"
-            onPress={() =>
+            disabled={!destination}
+            onPress={() => {
               console.log(
                 "Preferences:",
                 priority,
@@ -149,8 +153,22 @@ export default function App() {
                 location?.coords.latitude,
                 location?.coords.longitude,
                 destination,
-              )
-            }
+              );
+
+              router.push({
+                pathname: "/navigation",
+                params: {
+                  priority,
+                  mode,
+                  avoidHighways: String(avoidHighways),
+                  avoidTolls: String(avoidTolls),
+                  search,
+                  latitude: String(location?.coords.latitude),
+                  longitude: String(location?.coords.longitude),
+                  destination,
+                },
+              });
+            }}
           >
             Confirm
           </Button>
