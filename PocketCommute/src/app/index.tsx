@@ -33,9 +33,8 @@ export default function App() {
   const showPreferences = () => setPreferences(true);
   const hidePreferences = () => setPreferences(false);
 
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null,
-  );
+  const [currentLocation, setCurrentLocation] =
+    useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
@@ -51,7 +50,7 @@ export default function App() {
 
   useEffect(() => {
     getCurrentLocation(
-      setLocation,
+      setCurrentLocation,
       setErrorMsg,
       setNearbyPlaces,
       setLoadingLocationAndNearbyPlaces,
@@ -61,12 +60,12 @@ export default function App() {
   let text = "Waiting...";
   if (errorMsg) {
     text = errorMsg;
-  } else if (location) {
-    text = JSON.stringify(location);
+  } else if (currentLocation) {
+    text = JSON.stringify(currentLocation);
   }
 
   //show loading indicator while fetching location and nearby places
-  if (!location || loadingLocationAndNearbyPlaces) {
+  if (!currentLocation || loadingLocationAndNearbyPlaces) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
@@ -102,8 +101,8 @@ export default function App() {
                   getSuggestions(
                     setSuggestions,
                     text,
-                    location?.coords.longitude,
-                    location?.coords.latitude,
+                    currentLocation?.coords.longitude,
+                    currentLocation?.coords.latitude,
                   );
                 }, 500);
               }}
@@ -150,8 +149,8 @@ export default function App() {
                 avoidHighways,
                 avoidTolls,
                 search,
-                location?.coords.latitude,
-                location?.coords.longitude,
+                currentLocation?.coords.latitude,
+                currentLocation?.coords.longitude,
                 destination,
               );
 
@@ -163,8 +162,8 @@ export default function App() {
                   avoidHighways: String(avoidHighways),
                   avoidTolls: String(avoidTolls),
                   search,
-                  latitude: String(location?.coords.latitude),
-                  longitude: String(location?.coords.longitude),
+                  latitude: String(currentLocation?.coords.latitude),
+                  longitude: String(currentLocation?.coords.longitude),
                   destination,
                 },
               });
@@ -292,8 +291,8 @@ export default function App() {
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: currentLocation?.coords.latitude,
+            longitude: currentLocation?.coords.longitude,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
