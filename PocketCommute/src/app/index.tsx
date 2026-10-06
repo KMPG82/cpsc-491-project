@@ -16,9 +16,9 @@ import {
 import { useState, useEffect, useRef } from "react";
 
 import * as Location from "expo-location";
-import Constants from "expo-constants";
 
 import { getCurrentLocation } from "../utilities/getCurrentLocation";
+import { getSuggestions } from "../utilities/getSuggestions";
 
 //landing screen: contains search bar, map, and preferences selection
 export default function App() {
@@ -45,29 +45,6 @@ export default function App() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [destination, setDestination] = useState<any | null>(null);
-
-  //fetch suggestions for search query
-  async function getSuggestions(searchQuery: string) {
-    if (!searchQuery.trim()) {
-      setSuggestions([]);
-      return;
-    }
-
-    const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
-
-    //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/places/
-    const requestOptions = {
-      method: "GET",
-    };
-
-    fetch(
-      `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&limit=5&bias=proximity:${location?.coords.longitude},${location?.coords.latitude}&apiKey=${GEOAPIFY_KEY}`,
-      requestOptions,
-    )
-      .then((response) => response.json())
-      .then((result) => setSuggestions(result.features || []))
-      .catch((error) => console.log("error", error));
-  }
 
   useEffect(() => {
     getCurrentLocation(
@@ -119,7 +96,12 @@ export default function App() {
                 }
 
                 timer.current = setTimeout(() => {
-                  getSuggestions(text);
+                  getSuggestions(
+                    setSuggestions,
+                    text,
+                    location?.coords.longitude,
+                    location?.coords.latitude,
+                  );
                 }, 500);
               }}
               value={search}
@@ -324,6 +306,11 @@ export default function App() {
                   }}
                   title={name}
                   description={address}
+                  onPress={() => {
+                    setDestination(place);
+                    setSearch(name);
+                    console.log("Selected destination:", place);
+                  }}
                 />
               );
             })}

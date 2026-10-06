@@ -18,8 +18,6 @@ export async function getNearbyPlaces(
     requestOptions,
   )
     .then((response) => response.json())
-    .then((result) => {
-      setNearbyPlaces(result.features || []);
-    })
+    .then((result) => setNearbyPlaces(result.features || []))
     .catch((error) => console.log("error", error));
 }
