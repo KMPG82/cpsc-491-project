@@ -18,8 +18,8 @@ import { useRouter } from "expo-router";
 
 import * as Location from "expo-location";
 
-import { getCurrentLocation } from "../utilities/getCurrentLocation";
-import { getSuggestions } from "../utilities/getSuggestions";
+import { getCurrentLocation } from "../../utilities/getCurrentLocation";
+import { getSuggestions } from "../../utilities/getSuggestions";
 
 //landing screen: contains search bar, map, and preferences selection
 export default function App() {
