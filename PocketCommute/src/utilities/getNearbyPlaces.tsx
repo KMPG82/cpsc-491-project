@@ -1,13 +1,13 @@
 import Constants from "expo-constants";
 
+const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
+
 //fetch nearby places using Geoapify Places API
 export async function getNearbyPlaces(
   latitude: number,
   longitude: number,
   setNearbyPlaces: (places: any[]) => void,
 ) {
-  const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
-
   //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/places/
   const requestOptions = {
     method: "GET",

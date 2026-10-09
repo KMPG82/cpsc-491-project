@@ -1,5 +1,7 @@
 import Constants from "expo-constants";
 
+const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
+
 //fetch suggestions for search query using Geoapify Address Autocomplete API
 export async function getSuggestions(
   setSuggestions: (suggestions: any[]) => void,
@@ -11,8 +13,6 @@ export async function getSuggestions(
     setSuggestions([]);
     return;
   }
-
-  const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
 
   //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/geocoding/address-autocomplete/
   const requestOptions = {
