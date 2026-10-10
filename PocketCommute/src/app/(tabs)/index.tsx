@@ -25,7 +25,7 @@ import { getSuggestions } from "../../utilities/getSuggestions";
 export default function App() {
   const [search, setSearch] = useState("");
   const [preferences, setPreferences] = useState(false);
-  const [mode, setMode] = useState("drive");
+  const [mode, setMode] = useState("DRIVE");
   const [priority, setPriority] = useState("time");
   const [isDriving, setIsDriving] = useState(true);
   const [avoidHighways, setAvoidHighways] = useState(false);
@@ -101,8 +101,8 @@ export default function App() {
                   getSuggestions(
                     setSuggestions,
                     text,
-                    currentLocation?.coords.longitude,
-                    currentLocation?.coords.latitude,
+                    currentLocation.coords.longitude,
+                    currentLocation.coords.latitude,
                   );
                 }, 500);
               }}
@@ -118,19 +118,17 @@ export default function App() {
                     onPress={() => {
                       setDestination(suggestion);
 
-                      setSearch(suggestion.properties?.name || "");
+                      setSearch(suggestion.properties.name || "");
 
                       setSuggestions([]);
-
-                      console.log("Selected destination:", suggestion);
                     }}
                   >
                     <Text variant="bodyLarge">
-                      {suggestion.properties?.name}
+                      {suggestion.properties.name}
                     </Text>
 
                     <Text variant="bodySmall">
-                      {suggestion.properties?.address_line2}
+                      {suggestion.properties.address_line2}
                     </Text>
                   </Pressable>
                 ))}
@@ -142,17 +140,23 @@ export default function App() {
             mode="contained"
             disabled={!destination}
             onPress={() => {
-              console.log(
-                "Preferences:",
-                priority,
-                mode,
-                avoidHighways,
-                avoidTolls,
-                search,
-                currentLocation?.coords.latitude,
-                currentLocation?.coords.longitude,
-                destination,
-              );
+              if (!destination) {
+                console.log("No destination has been selected.");
+                return;
+              }
+
+              // console.log(
+              //   "Preferences:",
+              //   priority,
+              //   mode,
+              //   avoidHighways,
+              //   avoidTolls,
+              //   search,
+              //   currentLocation.coords.latitude,
+              //   currentLocation.coords.longitude,
+              //   destination.geometry.coordinates[1],
+              //   destination.geometry.coordinates[0],
+              // );
 
               router.push({
                 pathname: "/navigation",
@@ -162,9 +166,18 @@ export default function App() {
                   avoidHighways: String(avoidHighways),
                   avoidTolls: String(avoidTolls),
                   search,
-                  latitude: String(currentLocation?.coords.latitude),
-                  longitude: String(currentLocation?.coords.longitude),
-                  destination,
+                  currentLocationLatitude: String(
+                    currentLocation.coords.latitude,
+                  ),
+                  currentLocationLongitude: String(
+                    currentLocation.coords.longitude,
+                  ),
+                  destinationLatitude: String(
+                    destination.geometry.coordinates[1],
+                  ),
+                  destinationLongitude: String(
+                    destination.geometry.coordinates[0],
+                  ),
                 },
               });
             }}
@@ -188,24 +201,23 @@ export default function App() {
                     onValueChange={(newValue) => {
                       setMode(newValue);
                       setIsDriving(newValue === "drive");
-                      console.log(newValue);
                     }}
                     value={mode}
                   >
                     <View style={styles.optionsContainer}>
                       <View style={styles.option}>
                         <Text variant="bodyLarge">Walk</Text>
-                        <RadioButton value="walk" />
+                        <RadioButton value="WALK" />
                       </View>
 
                       <View style={styles.option}>
                         <Text variant="bodyLarge">Bike</Text>
-                        <RadioButton value="bike" />
+                        <RadioButton value="BICYCLE" />
                       </View>
 
                       <View style={styles.option}>
                         <Text variant="bodyLarge">Drive</Text>
-                        <RadioButton value="drive" />
+                        <RadioButton value="DRIVE" />
                       </View>
                     </View>
                   </RadioButton.Group>
@@ -220,7 +232,6 @@ export default function App() {
                   <RadioButton.Group
                     onValueChange={(newValue) => {
                       setPriority(newValue);
-                      console.log(newValue);
                     }}
                     value={priority}
                   >
@@ -264,7 +275,6 @@ export default function App() {
                         status={avoidHighways ? "checked" : "unchecked"}
                         onPress={() => {
                           setAvoidHighways(!avoidHighways);
-                          console.log(!avoidHighways);
                         }}
                       />
                     </View>
@@ -277,7 +287,6 @@ export default function App() {
                         status={avoidTolls ? "checked" : "unchecked"}
                         onPress={() => {
                           setAvoidTolls(!avoidTolls);
-                          console.log(!avoidTolls);
                         }}
                       />
                     </View>
@@ -291,8 +300,8 @@ export default function App() {
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: currentLocation?.coords.latitude,
-            longitude: currentLocation?.coords.longitude,
+            latitude: currentLocation.coords.latitude,
+            longitude: currentLocation.coords.longitude,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
@@ -300,10 +309,10 @@ export default function App() {
         >
           {nearbyPlaces &&
             nearbyPlaces.map((place, index) => {
-              const latitude = place?.properties?.lat;
-              const longitude = place?.properties?.lon;
-              const name = place?.properties?.name;
-              const address = place?.properties?.address_line2;
+              const latitude = place.properties.lat;
+              const longitude = place.properties.lon;
+              const name = place.properties.name;
+              const address = place.properties.address_line2;
 
               if (
                 !latitude ||
@@ -326,7 +335,6 @@ export default function App() {
                   onPress={() => {
                     setDestination(place);
                     setSearch(name);
-                    console.log("Selected destination:", place);
                   }}
                 />
               );
