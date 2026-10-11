@@ -200,7 +200,7 @@ export default function App() {
                   <RadioButton.Group
                     onValueChange={(newValue) => {
                       setMode(newValue);
-                      setIsDriving(newValue === "drive");
+                      setIsDriving(newValue == "DRIVE");
                     }}
                     value={mode}
                   >
