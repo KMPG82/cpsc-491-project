@@ -6,8 +6,8 @@ const GEOAPIFY_KEY = Constants.expoConfig?.extra?.geoapifyApiKey;
 export async function getSuggestions(
   setSuggestions: (suggestions: any[]) => void,
   searchQuery: string,
-  longitude?: number,
-  latitude?: number,
+  longitude: number,
+  latitude: number,
 ) {
   if (!searchQuery.trim()) {
     setSuggestions([]);
