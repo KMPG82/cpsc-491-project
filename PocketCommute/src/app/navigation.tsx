@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import Constants from "expo-constants";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { decodePolyline } from "../utilities/decodePolyline";
+import { Text } from "react-native-paper";
+import { View, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 
-const GOOGLE_API_KEY = Constants.expoConfig?.extra?.googleMapsRoutesApiKey;
+import { decodePolyline } from "../utilities/decodePolyline";
+import { getGoogleRoute } from "../utilities/getGoogleRoute";
 
 type GoogleRoute = {
   distanceMeters: number;
@@ -23,6 +24,9 @@ type GoogleRoute = {
       };
     }[];
   }[];
+  travelAdvisory?: {
+    fuelConsumptionMicroliters?: number;
+  };
 };
 
 type Coordinate = {
@@ -83,111 +87,6 @@ export default function navigation() {
   //   `${destinationLat}, ${destinationLong}`,
   // );
 
-  //gets a route from google using current location, preferences, and destination
-  async function getGoogleRoute(
-    setGoogleRoute: (route: GoogleRoute | null) => void,
-  ) {
-    let retrievedRoute: GoogleRoute[] = [];
-
-    if (mode == "DRIVE") {
-      const response = await fetch(
-        "https://routes.googleapis.com/directions/v2:computeRoutes",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": GOOGLE_API_KEY,
-            "X-Goog-FieldMask":
-              "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.navigationInstruction.instructions",
-          },
-          body: JSON.stringify({
-            origin: {
-              location: {
-                latLng: {
-                  latitude: currentLocationLat,
-                  longitude: currentLocationLong,
-                },
-              },
-            },
-            destination: {
-              location: {
-                latLng: {
-                  latitude: destinationLat,
-                  longitude: destinationLong,
-                },
-              },
-            },
-            travelMode: mode,
-            routingPreference: "TRAFFIC_AWARE_OPTIMAL",
-            extraComputations: ["FUEL_CONSUMPTION"],
-            routeModifiers: {
-              avoidTolls: shouldAvoidTolls,
-              avoidHighways: shouldAvoidHighways,
-              vehicleInfo: {
-                emissionType: "GASOLINE",
-              },
-            },
-          }),
-        },
-      );
-
-      const googleRouteData = await response.json();
-
-      if (!response.ok) {
-        console.log("Route retrieval was unsuccessful.");
-        return;
-      }
-
-      console.log("route data: ", googleRouteData.routes);
-      retrievedRoute = googleRouteData.routes;
-    } else {
-      const response = await fetch(
-        "https://routes.googleapis.com/directions/v2:computeRoutes",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": GOOGLE_API_KEY,
-            "X-Goog-FieldMask":
-              "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration,routes.legs.steps.navigationInstruction.instructions",
-          },
-          body: JSON.stringify({
-            origin: {
-              location: {
-                latLng: {
-                  latitude: currentLocationLat,
-                  longitude: currentLocationLong,
-                },
-              },
-            },
-            destination: {
-              location: {
-                latLng: {
-                  latitude: destinationLat,
-                  longitude: destinationLong,
-                },
-              },
-            },
-            travelMode: mode,
-          }),
-        },
-      );
-
-      const googleRouteData = await response.json();
-
-      if (!response.ok) {
-        console.log("Route retrieval was unsuccessful.");
-        return;
-      }
-
-      console.log("route data: ", googleRouteData.routes);
-      retrievedRoute = googleRouteData.routes;
-    }
-
-    setGoogleRoute(retrievedRoute[0]);
-    setRetrievingGoogleRoute(false);
-  }
-
   //evaluation algorithm for routes
   function evaluateRoutes(googleRoute: GoogleRoute | null) {
     setOptimalRoute(googleRoute);
@@ -200,7 +99,17 @@ export default function navigation() {
   }
 
   useEffect(() => {
-    getGoogleRoute(setGoogleRoute);
+    getGoogleRoute(
+      currentLocationLat,
+      currentLocationLong,
+      mode,
+      destinationLat,
+      destinationLong,
+      shouldAvoidHighways,
+      shouldAvoidTolls,
+      setRetrievingGoogleRoute,
+      setGoogleRoute,
+    );
   }, []);
 
   // Automatically zoom the map to show the entire route.
@@ -258,6 +167,49 @@ export default function navigation() {
           />
         )}
       </MapView>
+
+      {/* for Google route */}
+      <ScrollView
+        style={styles.bottomPanelContainer}
+        contentContainerStyle={styles.bottomPanelContent}
+      >
+        {optimalRoute && (
+          <>
+            <Text variant="headlineMedium">Route Details</Text>
+
+            <Text variant="bodyLarge">Duration: {optimalRoute.duration}</Text>
+
+            <Text variant="bodyLarge">
+              Distance: {optimalRoute.distanceMeters}m
+            </Text>
+
+            {mode === "DRIVE" &&
+              optimalRoute.travelAdvisory?.fuelConsumptionMicroliters && (
+                <Text variant="bodyLarge">
+                  Estimated Fuel:{" "}
+                  {optimalRoute.travelAdvisory?.fuelConsumptionMicroliters}
+                </Text>
+              )}
+
+            <Text variant="headlineMedium">Directions</Text>
+
+            {optimalRoute.legs[0].steps.map((step, index) => (
+              <View key={index} style={styles.direction}>
+                <View style={styles.directionContainer}>
+                  <Text variant="bodyLarge" style={styles.directionNumber}>
+                    {index + 1}.
+                  </Text>
+
+                  <Text variant="bodyLarge">
+                    {step.navigationInstruction.instructions}, continue for{" "}
+                    {step.distanceMeters}m
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -268,11 +220,29 @@ const styles = StyleSheet.create({
   },
   map: {
     width: "100%",
-    height: "100%",
+    flex: 3,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  bottomPanelContainer: {
+    flex: 2,
+    backgroundColor: "#ffffff",
+  },
+  bottomPanelContent: {
+    padding: 10,
+  },
+  directionContainer: {
+    flex: 1,
+    flexDirection: "row",
+    paddingRight: 10,
+  },
+  directionNumber: {
+    fontWeight: "bold",
+  },
+  direction: {
+    marginBottom: 10,
   },
 });
