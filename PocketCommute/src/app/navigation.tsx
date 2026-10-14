@@ -6,8 +6,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "react-native-paper";
 import { View, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 
-import { decodePolyline } from "../utilities/decodePolyline";
-import { getGoogleRoute } from "../utilities/getGoogleRoute";
+import {
+  decodeGooglePolyline,
+  decodeHerePolyline,
+} from "../utilities/decodePolyline";
+
+const HERE_API_KEY = Constants.expoConfig?.extra?.hereRoutingApiKey;
 
 type GoogleRoute = {
   distanceMeters: number;
@@ -27,6 +31,21 @@ type GoogleRoute = {
   travelAdvisory?: {
     fuelConsumptionMicroliters?: number;
   };
+};
+
+type HereRoute = {
+  sections: {
+    summary: {
+      length: number;
+      duration: number;
+    };
+    polyline: string;
+    actions: {
+      instruction?: string;
+      length?: number;
+      duration?: number;
+    }[];
+  }[];
 };
 
 type Coordinate = {
@@ -71,7 +90,11 @@ export default function navigation() {
   const [googleRoute, setGoogleRoute] = useState<GoogleRoute | null>(null);
   const [retrievingGoogleRoute, setRetrievingGoogleRoute] =
     useState<boolean>(true);
-  const [optimalRoute, setOptimalRoute] = useState<GoogleRoute | null>(null);
+
+  const [hereRoute, setHereRoute] = useState<HereRoute | null>(null);
+  const [retrievingHereRoute, setRetrievingHereRoute] = useState<boolean>(true);
+
+  const [optimalRoute, setOptimalRoute] = useState<HereRoute | null>(null);
 
   // console.log("priority:", priority);
   // console.log("mode:", mode);
@@ -87,39 +110,97 @@ export default function navigation() {
   //   `${destinationLat}, ${destinationLong}`,
   // );
 
+  //retrives route from HERE using current location and destination
+  async function getHereRoute(
+    currentLocationLat: number,
+    currentLocationLong: number,
+    mode: string,
+    destinationLat: number,
+    destinationLong: number,
+    setRetrievingHereRoute: (retrieving: boolean) => void,
+    setHereRoute: (route: HereRoute | null) => void,
+  ) {
+    let retrievedRoute: HereRoute[] = [];
+
+    let transportMode = "car";
+
+    if (mode === "WALK") {
+      transportMode = "pedestrian";
+    } else if (mode === "BICYCLE") {
+      transportMode = "bicycle";
+    }
+
+    const params = new URLSearchParams({
+      origin: `${currentLocationLat},${currentLocationLong}`,
+      destination: `${destinationLat},${destinationLong}`,
+      transportMode,
+      return: "summary,polyline,actions,instructions",
+      apiKey: HERE_API_KEY,
+    });
+
+    const response = await fetch(
+      `https://router.hereapi.com/v8/routes?${params.toString()}`,
+    );
+
+    const hereRouteData = await response.json();
+
+    if (!response.ok) {
+      console.log("Route retrieval was unsuccessful.");
+      return;
+    }
+
+    console.log("route data: ", hereRouteData.routes);
+    retrievedRoute = hereRouteData.routes;
+
+    setHereRoute(retrievedRoute[0]);
+    setRetrievingHereRoute(false);
+  }
+
   //evaluation algorithm for routes
-  function evaluateRoutes(googleRoute: GoogleRoute | null) {
-    setOptimalRoute(googleRoute);
+  function evaluateRoutes(
+    googleRoute: GoogleRoute | null,
+    hereRoute: HereRoute | null,
+  ) {
+    setOptimalRoute(hereRoute);
   }
 
   //happens everytime a usestate var is changed, which causes the screen to re-render
   let coordinates: Coordinate[] = [];
   if (optimalRoute) {
-    coordinates = decodePolyline(optimalRoute.polyline.encodedPolyline);
+    //coordinates = decodeGooglePolyline(optimalRoute.polyline.encodedPolyline);
+    coordinates = decodeHerePolyline(optimalRoute.sections[0].polyline);
   }
 
   useEffect(() => {
-    getGoogleRoute(
+    // getGoogleRoute(
+    //   currentLocationLat,
+    //   currentLocationLong,
+    //   mode,
+    //   destinationLat,
+    //   destinationLong,
+    //   shouldAvoidHighways,
+    //   shouldAvoidTolls,
+    //   setRetrievingGoogleRoute,
+    //   setGoogleRoute,
+    // );
+    getHereRoute(
       currentLocationLat,
       currentLocationLong,
       mode,
       destinationLat,
       destinationLong,
-      shouldAvoidHighways,
-      shouldAvoidTolls,
-      setRetrievingGoogleRoute,
-      setGoogleRoute,
+      setRetrievingHereRoute,
+      setHereRoute,
     );
   }, []);
 
-  // Automatically zoom the map to show the entire route.
   useEffect(() => {
-    if (!retrievingGoogleRoute) {
-      evaluateRoutes(googleRoute);
+    if (!retrievingHereRoute) {
+      evaluateRoutes(googleRoute, hereRoute);
     }
-  }, [googleRoute]);
+  }, [hereRoute]);
 
-  if (retrievingGoogleRoute) {
+  if (retrievingHereRoute) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
@@ -168,7 +249,7 @@ export default function navigation() {
         )}
       </MapView>
 
-      {/* for Google route */}
+      {/* for Google route
       <ScrollView
         style={styles.bottomPanelContainer}
         contentContainerStyle={styles.bottomPanelContent}
@@ -209,7 +290,7 @@ export default function navigation() {
             ))}
           </>
         )}
-      </ScrollView>
+      </ScrollView> */}
     </View>
   );
 }
