@@ -247,8 +247,8 @@ export default function App() {
                       </View>
 
                       <View style={styles.option}>
-                        <Text variant="bodyLarge">Steps</Text>
-                        <RadioButton value="steps" />
+                        <Text variant="bodyLarge">Directions</Text>
+                        <RadioButton value="directions" />
                       </View>
 
                       <View style={styles.option}>
