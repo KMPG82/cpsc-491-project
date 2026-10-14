@@ -39,6 +39,7 @@ export default {
     extra: {
       googleMapsRoutesApiKey: process.env.GOOGLE_MAPS_API_KEY,
       geoapifyApiKey: process.env.GEOAPIFY_API_KEY,
+      hereRoutingApiKey: process.env.HERE_API_KEY,
     },
   },
 };
