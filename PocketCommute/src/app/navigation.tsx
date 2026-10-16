@@ -38,6 +38,7 @@ type HereRoute = {
     summary: {
       length: number;
       duration: number;
+      consumption?: number;
     };
     polyline: string;
     actions: {
@@ -137,6 +138,15 @@ export default function navigation() {
       return: "summary,polyline,actions,instructions",
       apiKey: HERE_API_KEY,
     });
+
+    //free flow speed table is from HERE documentation: https://docs.here.com/routing/docs/routing-v8-consumption-ice-empirical
+    if (transportMode == "car") {
+      params.append("fuel[type]", "diesel");
+      params.append(
+        "fuel[freeFlowSpeedTable]",
+        "10,0.095,20,0.072,30,0.058,40,0.049,50,0.045,60,0.043,70,0.042,80,0.043,90,0.045,100,0.047,110,0.05,120,0.052,130,0.055",
+      );
+    }
 
     const response = await fetch(
       `https://router.hereapi.com/v8/routes?${params.toString()}`,
@@ -249,6 +259,47 @@ export default function navigation() {
         )}
       </MapView>
 
+      {/* for HERE route */}
+      <ScrollView
+        style={styles.bottomPanelContainer}
+        contentContainerStyle={styles.bottomPanelContent}
+      >
+        {optimalRoute && (
+          <>
+            <Text variant="headlineMedium">Route Details</Text>
+
+            <Text variant="bodyLarge">
+              Duration: {optimalRoute.sections[0].summary.duration}
+            </Text>
+
+            <Text variant="bodyLarge">
+              Distance: {optimalRoute.sections[0].summary.length}m
+            </Text>
+
+            {mode === "DRIVE" &&
+              optimalRoute.sections[0].summary.consumption && (
+                <Text variant="bodyLarge">
+                  Estimated Fuel: {optimalRoute.sections[0].summary.consumption}
+                  L
+                </Text>
+              )}
+
+            <Text variant="headlineMedium">Directions</Text>
+
+            {optimalRoute.sections[0].actions.map((action, index) => (
+              <View key={index} style={styles.direction}>
+                <View style={styles.directionContainer}>
+                  <Text variant="bodyLarge" style={styles.directionNumber}>
+                    {index + 1}.
+                  </Text>
+
+                  <Text variant="bodyLarge">{action.instruction}</Text>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+      </ScrollView>
       {/* for Google route
       <ScrollView
         style={styles.bottomPanelContainer}
@@ -282,8 +333,7 @@ export default function navigation() {
                   </Text>
 
                   <Text variant="bodyLarge">
-                    {step.navigationInstruction.instructions}, continue for{" "}
-                    {step.distanceMeters}m
+                    {step.navigationInstruction.instructions}, go for {step.distanceMeters}m
                   </Text>
                 </View>
               </View>
