@@ -118,6 +118,8 @@ export default function navigation() {
     mode: string,
     destinationLat: number,
     destinationLong: number,
+    shouldAvoidHighways: boolean,
+    shouldAvoidTolls: boolean,
     setRetrievingHereRoute: (retrieving: boolean) => void,
     setHereRoute: (route: HereRoute | null) => void,
   ) {
@@ -146,6 +148,20 @@ export default function navigation() {
         "fuel[freeFlowSpeedTable]",
         "10,0.095,20,0.072,30,0.058,40,0.049,50,0.045,60,0.043,70,0.042,80,0.043,90,0.045,100,0.047,110,0.05,120,0.052,130,0.055",
       );
+
+      const avoidancePreferences = [];
+
+      if (shouldAvoidHighways) {
+        avoidancePreferences.push("controlledAccessHighway");
+      }
+
+      if (shouldAvoidTolls) {
+        avoidancePreferences.push("tollRoad");
+      }
+
+      if (avoidancePreferences.length > 0) {
+        params.append("avoid[features]", avoidancePreferences.join(","));
+      }
     }
 
     const response = await fetch(
@@ -199,6 +215,8 @@ export default function navigation() {
       mode,
       destinationLat,
       destinationLong,
+      shouldAvoidHighways,
+      shouldAvoidTolls,
       setRetrievingHereRoute,
       setHereRoute,
     );
@@ -293,7 +311,7 @@ export default function navigation() {
                     {index + 1}.
                   </Text>
 
-                  <Text variant="bodyLarge">{action.instruction}</Text>
+                  <Text variant="bodyLarge"> {action.instruction}</Text>
                 </View>
               </View>
             ))}
@@ -333,7 +351,7 @@ export default function navigation() {
                   </Text>
 
                   <Text variant="bodyLarge">
-                    {step.navigationInstruction.instructions}, go for {step.distanceMeters}m
+                     {step.navigationInstruction.instructions}, go for {step.distanceMeters}m
                   </Text>
                 </View>
               </View>
