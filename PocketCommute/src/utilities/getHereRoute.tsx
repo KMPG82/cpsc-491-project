@@ -82,7 +82,7 @@ export async function getHereRoute(
     return;
   }
 
-  console.log("route data: ", hereRouteData.routes);
+  //console.log("route data: ", hereRouteData.routes);
   retrievedRoute = hereRouteData.routes;
 
   setHereRoute(retrievedRoute[0]);

@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import Constants from "expo-constants";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,8 +11,6 @@ import {
   decodeGooglePolyline,
   decodeHerePolyline,
 } from "../utilities/decodePolyline";
-
-const HERE_API_KEY = Constants.expoConfig?.extra?.hereRoutingApiKey;
 
 type GoogleRoute = {
   distanceMeters: number;
@@ -93,53 +90,107 @@ export default function navigation() {
   const [googleRoute, setGoogleRoute] = useState<GoogleRoute | null>(null);
   const [retrievingGoogleRoute, setRetrievingGoogleRoute] =
     useState<boolean>(true);
+  const [googleRouteChosen, setGoogleRouteChosen] = useState<boolean>(false);
 
   const [hereRoute, setHereRoute] = useState<HereRoute | null>(null);
   const [retrievingHereRoute, setRetrievingHereRoute] = useState<boolean>(true);
+  const [hereRouteChosen, setHereRouteChosen] = useState<boolean>(false);
 
-  const [optimalRoute, setOptimalRoute] = useState<HereRoute | null>(null);
-
-  // console.log("priority:", priority);
-  // console.log("mode:", mode);
-  // console.log("search query:", search);
-  // console.log("avoid highways:", shouldAvoidHighways);
-  // console.log("avoid tolls:", shouldAvoidTolls);
-  // console.log(
-  //   "current coordinates:",
-  //   `${currentLocationLat}, ${currentLocationLong}`,
-  // );
-  // console.log(
-  //   "destination coordinates:",
-  //   `${destinationLat}, ${destinationLong}`,
-  // );
-
-  //evaluation algorithm for routes
+  /*TODO:
+      1. convert the distance for Google and Here routes to miles, currently it is in meters
+      2. convert the time for Google and Here routes to minutes, currently it is in seconds
+      3. if mode is set to driving, convert the fuel consumption for Google and Here routes to gallons, currently Google's is measured in microliters and Here's is measured in liters
+      4. create the scoring algorithm based on the chosen priority
+        *use these formulas if mode is set to DRIVE:
+        - if priority is time, then use: (0.70)(time in minutes) + (0.10)(distance in miles) + (0.10)(number of directions) + (0.10)(fuel consumption in gallons)
+        - if priority is distance, then use: (0.10)(time in minutes) + (0.70)(distance in miles) + (0.10)(number of directions) + (0.10)(fuel consumption in gallons)
+        - if priority is directions, then use: (0.10)(time in minutes) + (0.10)(distance in miles) + (0.70)(number of directions) + (0.10)(fuel consumption in gallons)
+        - if priority is fuel, then use: (0.10)(time in minutes) + (0.10)(distance in miles) + (0.10)(number of directions) + (0.70)(fuel consumption in gallons)
+          
+        *use these formulas if mode is not set to DRIVE:
+        - if priority is time, then use: (0.70)(time in minutes) + (0.15)(distance in miles) + (0.15)(number of directions)
+        - if priority is distance, then use: (0.15)(time in minutes) + (0.70)(distance in miles) + (0.15)(number of directions)
+        - if priority is directions, then use: (0.15)(time in minutes) + (0.15)(distance in miles) + (0.70)(number of directions)
+  */
   function evaluateRoutes(
     googleRoute: GoogleRoute | null,
+    setGoogleRouteChosen: (googleChosen: boolean) => void,
     hereRoute: HereRoute | null,
+    setHereRouteChosen: (hereChosen: boolean) => void,
   ) {
-    setOptimalRoute(hereRoute);
+    console.log("Priority:", priority);
+    console.log("Mode:", mode);
+    //google's route data
+    console.log("Google route time:", googleRoute?.duration);
+    console.log("Google route distance:", googleRoute?.distanceMeters);
+    if (mode == "DRIVE") {
+      console.log(
+        "Google route fuel consumption:",
+        googleRoute?.travelAdvisory?.fuelConsumptionMicroliters,
+      );
+    }
+    console.log("Google route directions:", googleRoute?.legs[0]);
+    //here's route data
+    console.log("HERE route time:", hereRoute?.sections[0].summary.duration);
+    console.log("HERE route distance:", hereRoute?.sections[0].summary.length);
+    if (mode == "DRIVE") {
+      console.log(
+        "HERE route fuel consumption:",
+        hereRoute?.sections[0].summary.consumption,
+      );
+    }
+    console.log("HERE route directions:", hereRoute?.sections[0].actions);
+
+    //setGoogleRouteChosen(true);
+    //setHereRouteChosen(true);
   }
 
+  /*TODO: convert a distance in meters to miles*/
+  const convertToMiles = (distanceInMeters: number): number => {
+    let distanceInMiles = 0;
+
+    return distanceInMiles;
+  };
+
+  /*TODO: convert a time in seconds to minutes*/
+  const convertToMinutes = (timeInSeconds: number): number => {
+    let timeInMinutes = 0;
+
+    return timeInMinutes;
+  };
+
+  /*TODO: convert fuel consumption to gallons*/
+  const convertToGallons = (fuel: number): number => {
+    let fuelInGallons = 0;
+
+    return fuelInGallons;
+  };
+
   //happens everytime a usestate var is changed, which causes the screen to re-render
-  let coordinates: Coordinate[] = [];
-  if (optimalRoute) {
-    //coordinates = decodeGooglePolyline(optimalRoute.polyline.encodedPolyline);
-    coordinates = decodeHerePolyline(optimalRoute.sections[0].polyline);
+  let googleCoordinates: Coordinate[] = [];
+  if (googleRoute) {
+    googleCoordinates = decodeGooglePolyline(
+      googleRoute.polyline.encodedPolyline,
+    );
+  }
+
+  let hereCoordinates: Coordinate[] = [];
+  if (hereRoute) {
+    hereCoordinates = decodeHerePolyline(hereRoute.sections[0].polyline);
   }
 
   useEffect(() => {
-    // getGoogleRoute(
-    //   currentLocationLat,
-    //   currentLocationLong,
-    //   mode,
-    //   destinationLat,
-    //   destinationLong,
-    //   shouldAvoidHighways,
-    //   shouldAvoidTolls,
-    //   setRetrievingGoogleRoute,
-    //   setGoogleRoute,
-    // );
+    getGoogleRoute(
+      currentLocationLat,
+      currentLocationLong,
+      mode,
+      destinationLat,
+      destinationLong,
+      shouldAvoidHighways,
+      shouldAvoidTolls,
+      setRetrievingGoogleRoute,
+      setGoogleRoute,
+    );
     getHereRoute(
       currentLocationLat,
       currentLocationLong,
@@ -154,12 +205,17 @@ export default function navigation() {
   }, []);
 
   useEffect(() => {
-    if (!retrievingHereRoute) {
-      evaluateRoutes(googleRoute, hereRoute);
+    if (!retrievingGoogleRoute && !retrievingHereRoute) {
+      evaluateRoutes(
+        googleRoute,
+        setGoogleRouteChosen,
+        hereRoute,
+        setHereRouteChosen,
+      );
     }
-  }, [hereRoute]);
+  }, [googleRoute, hereRoute]);
 
-  if (retrievingHereRoute) {
+  if (retrievingGoogleRoute || retrievingHereRoute) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
@@ -199,43 +255,85 @@ export default function navigation() {
           pinColor="red"
         />
 
-        {coordinates.length > 0 && (
+        {googleCoordinates.length > 0 && (
           <Polyline
-            coordinates={coordinates}
+            coordinates={googleCoordinates}
             strokeColor="#2563eb"
+            strokeWidth={5}
+          />
+        )}
+
+        {hereCoordinates.length > 0 && (
+          <Polyline
+            coordinates={hereCoordinates}
+            strokeColor="red"
             strokeWidth={5}
           />
         )}
       </MapView>
 
-      {/* for HERE route */}
       <ScrollView
         style={styles.bottomPanelContainer}
         contentContainerStyle={styles.bottomPanelContent}
       >
-        {optimalRoute && (
+        {googleRoute && (
           <>
-            <Text variant="headlineMedium">Route Details</Text>
+            <Text variant="headlineMedium">Google Route Details</Text>
+
+            <Text variant="bodyLarge">Duration: {googleRoute.duration}</Text>
 
             <Text variant="bodyLarge">
-              Duration: {optimalRoute.sections[0].summary.duration}
-            </Text>
-
-            <Text variant="bodyLarge">
-              Distance: {optimalRoute.sections[0].summary.length}m
+              Distance: {googleRoute.distanceMeters}m
             </Text>
 
             {mode === "DRIVE" &&
-              optimalRoute.sections[0].summary.consumption && (
+              googleRoute.travelAdvisory?.fuelConsumptionMicroliters && (
                 <Text variant="bodyLarge">
-                  Estimated Fuel: {optimalRoute.sections[0].summary.consumption}
-                  L
+                  Estimated Fuel:{" "}
+                  {googleRoute.travelAdvisory?.fuelConsumptionMicroliters}
                 </Text>
               )}
 
             <Text variant="headlineMedium">Directions</Text>
 
-            {optimalRoute.sections[0].actions.map((action, index) => (
+            {googleRoute.legs[0].steps.map((step, index) => (
+              <View key={index} style={styles.direction}>
+                <View style={styles.directionContainer}>
+                  <Text variant="bodyLarge" style={styles.directionNumber}>
+                    {index + 1}.
+                  </Text>
+
+                  <Text variant="bodyLarge">
+                    {step.navigationInstruction.instructions}, go for{" "}
+                    {step.distanceMeters}m
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+
+        {hereRoute && (
+          <>
+            <Text variant="headlineMedium">HERE Route Details</Text>
+
+            <Text variant="bodyLarge">
+              Duration: {hereRoute.sections[0].summary.duration}
+            </Text>
+
+            <Text variant="bodyLarge">
+              Distance: {hereRoute.sections[0].summary.length}m
+            </Text>
+
+            {mode === "DRIVE" && hereRoute.sections[0].summary.consumption && (
+              <Text variant="bodyLarge">
+                Estimated Fuel: {hereRoute.sections[0].summary.consumption}L
+              </Text>
+            )}
+
+            <Text variant="headlineMedium">Directions</Text>
+
+            {hereRoute.sections[0].actions.map((action, index) => (
               <View key={index} style={styles.direction}>
                 <View style={styles.directionContainer}>
                   <Text variant="bodyLarge" style={styles.directionNumber}>
@@ -249,47 +347,6 @@ export default function navigation() {
           </>
         )}
       </ScrollView>
-      {/* for Google route
-      <ScrollView
-        style={styles.bottomPanelContainer}
-        contentContainerStyle={styles.bottomPanelContent}
-      >
-        {optimalRoute && (
-          <>
-            <Text variant="headlineMedium">Route Details</Text>
-
-            <Text variant="bodyLarge">Duration: {optimalRoute.duration}</Text>
-
-            <Text variant="bodyLarge">
-              Distance: {optimalRoute.distanceMeters}m
-            </Text>
-
-            {mode === "DRIVE" &&
-              optimalRoute.travelAdvisory?.fuelConsumptionMicroliters && (
-                <Text variant="bodyLarge">
-                  Estimated Fuel:{" "}
-                  {optimalRoute.travelAdvisory?.fuelConsumptionMicroliters}
-                </Text>
-              )}
-
-            <Text variant="headlineMedium">Directions</Text>
-
-            {optimalRoute.legs[0].steps.map((step, index) => (
-              <View key={index} style={styles.direction}>
-                <View style={styles.directionContainer}>
-                  <Text variant="bodyLarge" style={styles.directionNumber}>
-                    {index + 1}.
-                  </Text>
-
-                  <Text variant="bodyLarge">
-                     {step.navigationInstruction.instructions}, go for {step.distanceMeters}m
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </>
-        )}
-      </ScrollView> */}
     </View>
   );
 }

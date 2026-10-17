@@ -127,7 +127,7 @@ export async function getGoogleRoute(
       return;
     }
 
-    console.log("google route data: ", googleRouteData.routes);
+    //console.log("google route data: ", googleRouteData.routes);
     retrievedRoute = googleRouteData.routes;
   }
 
