@@ -131,7 +131,10 @@ export default function navigation() {
         googleRoute?.travelAdvisory?.fuelConsumptionMicroliters,
       );
     }
-    console.log("Google route directions:", googleRoute?.legs[0]);
+    console.log(
+      "Number of Google route directions:",
+      googleRoute?.legs[0].steps.length,
+    );
     //here's route data
     console.log("HERE route time:", hereRoute?.sections[0].summary.duration);
     console.log("HERE route distance:", hereRoute?.sections[0].summary.length);
@@ -141,7 +144,10 @@ export default function navigation() {
         hereRoute?.sections[0].summary.consumption,
       );
     }
-    console.log("HERE route directions:", hereRoute?.sections[0].actions);
+    console.log(
+      "Number of HERE route directions:",
+      hereRoute?.sections[0].actions.length,
+    );
 
     setGoogleRouteChosen(true);
     setRouteDetails("google");
@@ -307,6 +313,10 @@ export default function navigation() {
               Distance: {googleRoute.distanceMeters}m
             </Text>
 
+            <Text variant="bodyLarge">
+              Number of Directions: {googleRoute.legs[0].steps.length}
+            </Text>
+
             {mode === "DRIVE" &&
               googleRoute.travelAdvisory?.fuelConsumptionMicroliters && (
                 <Text variant="bodyLarge">
@@ -344,6 +354,10 @@ export default function navigation() {
 
             <Text variant="bodyLarge">
               Distance: {hereRoute.sections[0].summary.length}m
+            </Text>
+
+            <Text variant="bodyLarge">
+              Number of Directions: {hereRoute.sections[0].actions.length}
             </Text>
 
             {mode === "DRIVE" && hereRoute.sections[0].summary.consumption && (
