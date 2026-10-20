@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "react-native-paper";
+import { Text, Button } from "react-native-paper";
 import { View, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 
 import { getGoogleRoute } from "../utilities/getGoogleRoute";
@@ -96,6 +96,8 @@ export default function navigation() {
   const [retrievingHereRoute, setRetrievingHereRoute] = useState<boolean>(true);
   const [hereRouteChosen, setHereRouteChosen] = useState<boolean>(false);
 
+  const [routeDetails, setRouteDetails] = useState<"google" | "here">("google");
+
   /*TODO:
       1. convert the distance for Google and Here routes to miles, currently it is in meters
       2. convert the time for Google and Here routes to minutes, currently it is in seconds
@@ -141,8 +143,10 @@ export default function navigation() {
     }
     console.log("HERE route directions:", hereRoute?.sections[0].actions);
 
-    //setGoogleRouteChosen(true);
-    //setHereRouteChosen(true);
+    setGoogleRouteChosen(true);
+    setRouteDetails("google");
+    // setHereRouteChosen(true);
+    // setRouteDetails("here");
   }
 
   /*TODO: convert a distance in meters to miles*/
@@ -243,7 +247,7 @@ export default function navigation() {
             longitude: currentLocationLong,
           }}
           title="Current Location"
-          pinColor="blue"
+          pinColor="red"
         />
 
         <Marker
@@ -258,7 +262,7 @@ export default function navigation() {
         {googleCoordinates.length > 0 && (
           <Polyline
             coordinates={googleCoordinates}
-            strokeColor="#2563eb"
+            strokeColor={googleRouteChosen ? "green" : "gray"}
             strokeWidth={5}
           />
         )}
@@ -266,7 +270,7 @@ export default function navigation() {
         {hereCoordinates.length > 0 && (
           <Polyline
             coordinates={hereCoordinates}
-            strokeColor="red"
+            strokeColor={hereRouteChosen ? "green" : "gray"}
             strokeWidth={5}
           />
         )}
@@ -276,7 +280,24 @@ export default function navigation() {
         style={styles.bottomPanelContainer}
         contentContainerStyle={styles.bottomPanelContent}
       >
-        {googleRoute && (
+        <View style={styles.changeRouteDetailsButtonContainer}>
+          <Button
+            mode="contained"
+            buttonColor="blue"
+            onPress={() => {
+              if (routeDetails === "google" && hereRoute) {
+                setRouteDetails("here");
+              } else if (googleRoute) {
+                setRouteDetails("google");
+              }
+            }}
+          >
+            {routeDetails === (googleRouteChosen ? "google" : "here")
+              ? "View Alternative Route"
+              : "View Optimal Route"}
+          </Button>
+        </View>
+        {googleRoute && routeDetails === "google" && (
           <>
             <Text variant="headlineMedium">Google Route Details</Text>
 
@@ -313,7 +334,7 @@ export default function navigation() {
           </>
         )}
 
-        {hereRoute && (
+        {hereRoute && routeDetails === "here" && (
           <>
             <Text variant="headlineMedium">HERE Route Details</Text>
 
@@ -381,5 +402,9 @@ const styles = StyleSheet.create({
   },
   direction: {
     marginBottom: 10,
+  },
+  changeRouteDetailsButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
   },
 });
