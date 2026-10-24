@@ -162,10 +162,10 @@ export default function navigation() {
     return distanceInMiles;
   };
 
-  /*TODO: convert a time in seconds to minutes*/
+  /*convert a time in seconds to minutes*/
   const convertToMinutes = (timeInSeconds: number): number => {
-    let timeInMinutes = 0;
-  
+    //1 minute = 60 seconds
+    let timeInMinutes = timeInSeconds / 60;
     return timeInMinutes;
   };
 
