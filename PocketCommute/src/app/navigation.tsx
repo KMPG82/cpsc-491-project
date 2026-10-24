@@ -99,20 +99,9 @@ export default function navigation() {
   const [routeDetails, setRouteDetails] = useState<"google" | "here">("google");
 
   /*TODO:
-      1. convert the distance for Google and Here routes to miles, currently it is in meters
-      2. convert the time for Google and Here routes to minutes, currently it is in seconds
-      3. if mode is set to driving, convert the fuel consumption for Google and Here routes to gallons, currently Google's is measured in microliters and Here's is measured in liters
-      4. create the scoring algorithm based on the chosen priority
-        *use these formulas if mode is set to DRIVE:
-        - if priority is time, then use: (0.70)(time in minutes) + (0.10)(distance in miles) + (0.10)(number of directions) + (0.10)(fuel consumption in gallons)
-        - if priority is distance, then use: (0.10)(time in minutes) + (0.70)(distance in miles) + (0.10)(number of directions) + (0.10)(fuel consumption in gallons)
-        - if priority is directions, then use: (0.10)(time in minutes) + (0.10)(distance in miles) + (0.70)(number of directions) + (0.10)(fuel consumption in gallons)
-        - if priority is fuel, then use: (0.10)(time in minutes) + (0.10)(distance in miles) + (0.10)(number of directions) + (0.70)(fuel consumption in gallons)
-          
-        *use these formulas if mode is not set to DRIVE:
-        - if priority is time, then use: (0.70)(time in minutes) + (0.15)(distance in miles) + (0.15)(number of directions)
-        - if priority is distance, then use: (0.15)(time in minutes) + (0.70)(distance in miles) + (0.15)(number of directions)
-        - if priority is directions, then use: (0.15)(time in minutes) + (0.15)(distance in miles) + (0.70)(number of directions)
+      1. complete the normalize function, more details above the function
+      2. use the normalize function to calculate the normalized values for each factor for both routes
+      3. substitute the current parameters used in calculateScore call with the normalized values
   */
   function evaluateRoutes(
     googleRoute: GoogleRoute | null,
@@ -168,34 +157,7 @@ export default function navigation() {
     const hereDirections = hereRoute.sections[0].actions.length;
     console.log("Number of HERE route directions:", hereDirections);
 
-    //calculates a route's score using the formula for the chosen mode and priority
-    const calculateScore = (time: number, distance: number, directions: number, fuel: number): number => {
-      let score = 0;
-      // given formulas
-      if (mode == "DRIVE") {
-        if (priority == "time") {
-          score = 0.7 * time + 0.1 * distance + 0.1 * directions + 0.1 * fuel;
-        } else if (priority == "distance") {
-          score = 0.1 * time + 0.7 * distance + 0.1 * directions + 0.1 * fuel;
-        } else if (priority == "directions") {
-          score = 0.1 * time + 0.1 * distance + 0.7 * directions + 0.1 * fuel;
-        } else if (priority == "fuel") {
-          score = 0.1 * time + 0.1 * distance + 0.1 * directions + 0.7 * fuel;
-        }
-        
-      } else {
-        if (priority == "distance") {
-          score = 0.15 * time + 0.7 * distance + 0.15 * directions;
-        } else if (priority == "directions") {
-          score = 0.15 * time + 0.15 * distance + 0.7 * directions;
-        } else {
-          //time, also used if fuel was left selected after switching from driving
-          score = 0.7 * time + 0.15 * distance + 0.15 * directions;
-        }
-      }
-      return score;
-    };
-
+    //TODO: use the normalized values for each factor as parameters for calling calculateScore
     const googleScore = calculateScore(
       googleTime,
       googleDistance,
@@ -203,6 +165,8 @@ export default function navigation() {
       googleFuel,
     );
     console.log("Google route score:", googleScore);
+
+    //TODO: use the normalized values for each factor as parameters for calling calculateScore
     const hereScore = calculateScore(
       hereTime,
       hereDistance,
@@ -236,17 +200,55 @@ export default function navigation() {
   };
 
   //convert fuel consumption to gallons, google gives microliters and here gives liters
-  const convertToGallons = (fuel: number, unit: "microliters" | "liters",): number => {
+  const convertToGallons = (
+    fuel: number,
+    unit: "microliters" | "liters",
+  ): number => {
     let fuelInLiters = fuel;
     if (unit === "microliters") {
       //1 liter = 1,000,000 microliters
       fuelInLiters = fuel / 1000000;
     }
-    
+
     //1 gallon = 3.785411784 liters
     let fuelInGallons = fuelInLiters / 3.785411784;
     return fuelInGallons;
   };
+
+  //calculates a route's score using the formula for the chosen mode and priority
+  const calculateScore = (
+    time: number,
+    distance: number,
+    directions: number,
+    fuel: number,
+  ): number => {
+    let score = 0;
+    // given formulas
+    if (mode == "DRIVE") {
+      if (priority == "time") {
+        score = 0.7 * time + 0.1 * distance + 0.1 * directions + 0.1 * fuel;
+      } else if (priority == "distance") {
+        score = 0.1 * time + 0.7 * distance + 0.1 * directions + 0.1 * fuel;
+      } else if (priority == "directions") {
+        score = 0.1 * time + 0.1 * distance + 0.7 * directions + 0.1 * fuel;
+      } else if (priority == "fuel") {
+        score = 0.1 * time + 0.1 * distance + 0.1 * directions + 0.7 * fuel;
+      }
+    } else {
+      if (priority == "distance") {
+        score = 0.15 * time + 0.7 * distance + 0.15 * directions;
+      } else if (priority == "directions") {
+        score = 0.15 * time + 0.15 * distance + 0.7 * directions;
+      } else {
+        //time, also used if fuel was left selected after switching from driving
+        score = 0.7 * time + 0.15 * distance + 0.15 * directions;
+      }
+    }
+    return score;
+  };
+
+  //TODO: normalizes metrics by returning the divison of largest value by the smallest value
+  const normalize = (value1: number, value2: number) => {};
 
   //happens everytime a usestate var is changed, which causes the screen to re-render
   let googleCoordinates: Coordinate[] = [];
@@ -337,18 +339,34 @@ export default function navigation() {
           pinColor="red"
         />
 
-        {googleCoordinates.length > 0 && (
+        {googleCoordinates.length > 0 && !googleRouteChosen && (
           <Polyline
             coordinates={googleCoordinates}
-            strokeColor={googleRouteChosen ? "green" : "gray"}
+            strokeColor="gray"
             strokeWidth={5}
           />
         )}
 
-        {hereCoordinates.length > 0 && (
+        {hereCoordinates.length > 0 && !hereRouteChosen && (
           <Polyline
             coordinates={hereCoordinates}
-            strokeColor={hereRouteChosen ? "green" : "gray"}
+            strokeColor="gray"
+            strokeWidth={5}
+          />
+        )}
+
+        {googleCoordinates.length > 0 && googleRouteChosen && (
+          <Polyline
+            coordinates={googleCoordinates}
+            strokeColor="green"
+            strokeWidth={5}
+          />
+        )}
+
+        {hereCoordinates.length > 0 && hereRouteChosen && (
+          <Polyline
+            coordinates={hereCoordinates}
+            strokeColor="green"
             strokeWidth={5}
           />
         )}
