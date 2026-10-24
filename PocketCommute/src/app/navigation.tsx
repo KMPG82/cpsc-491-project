@@ -247,7 +247,13 @@ export default function navigation() {
     return score;
   };
 
-  //TODO: normalizes metrics by returning the divison of largest value by the smallest value
+  /* TODO: 
+        normalizes metrics by returning the divison of largest value by the smallest value 
+        
+        example function calls would be: 
+        normalizedGoogleTime = normalize(googleTime, hereTime)
+        normalizedHereTime = normalize(hereTime, googleTime)
+  */
   const normalize = (value1: number, value2: number) => {};
 
   //happens everytime a usestate var is changed, which causes the screen to re-render
