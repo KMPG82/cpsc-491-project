@@ -155,14 +155,14 @@ export default function navigation() {
     // setRouteDetails("here");
   }
 
-  /*convert a distance in meters to miles*/
+  //convert a distance in meters to miles
   const convertToMiles = (distanceInMeters: number): number => {
     //1 mile = 1609.344 meters
     let distanceInMiles = distanceInMeters / 1609.344;
     return distanceInMiles;
   };
 
-  /*convert a time in seconds to minutes*/
+  //convert a time in seconds to minutes
   const convertToMinutes = (timeInSeconds: number): number => {
     //1 minute = 60 seconds
     let timeInMinutes = timeInSeconds / 60;
