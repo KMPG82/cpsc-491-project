@@ -169,10 +169,16 @@ export default function navigation() {
     return timeInMinutes;
   };
 
-  /*TODO: convert fuel consumption to gallons*/
-  const convertToGallons = (fuel: number): number => {
-    let fuelInGallons = 0;
-
+  //convert fuel consumption to gallons, google gives microliters and here gives liters
+  const convertToGallons = (fuel: number, unit: "microliters" | "liters",): number => {
+    let fuelInLiters = fuel;
+    if (unit === "microliters") {
+      //1 liter = 1,000,000 microliters
+      fuelInLiters = fuel / 1000000;
+    }
+    
+    //1 gallon = 3.785411784 liters
+    let fuelInGallons = fuelInLiters / 3.785411784;
     return fuelInGallons;
   };
 
