@@ -50,10 +50,10 @@ export async function getHereRoute(
 
   //free flow speed table is from HERE documentation: https://docs.here.com/routing/docs/routing-v8-consumption-ice-empirical
   if (transportMode == "car") {
-    params.append("fuel[type]", "diesel");
+    params.append("fuel[type]", "petrol");
     params.append(
       "fuel[freeFlowSpeedTable]",
-      "10,0.095,20,0.072,30,0.058,40,0.049,50,0.045,60,0.043,70,0.042,80,0.043,90,0.045,100,0.047,110,0.05,120,0.052,130,0.055",
+      "0,0.239,27,0.239,45,0.259,60,0.196,75,0.207,90,0.238,100,0.26,110,0.296,120,0.337,130,0.351",
     );
 
     const avoidancePreferences = [];
