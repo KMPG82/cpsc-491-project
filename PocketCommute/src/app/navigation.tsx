@@ -122,37 +122,103 @@ export default function navigation() {
   ) {
     console.log("Priority:", priority);
     console.log("Mode:", mode);
-    //google's route data
-    console.log("Google route time:", googleRoute?.duration);
-    console.log("Google route distance:", googleRoute?.distanceMeters);
-    if (mode == "DRIVE") {
-      console.log(
-        "Google route fuel consumption:",
-        googleRoute?.travelAdvisory?.fuelConsumptionMicroliters,
-      );
-    }
-    console.log(
-      "Number of Google route directions:",
-      googleRoute?.legs[0].steps.length,
-    );
-    //here's route data
-    console.log("HERE route time:", hereRoute?.sections[0].summary.duration);
-    console.log("HERE route distance:", hereRoute?.sections[0].summary.length);
-    if (mode == "DRIVE") {
-      console.log(
-        "HERE route fuel consumption:",
-        hereRoute?.sections[0].summary.consumption,
-      );
-    }
-    console.log(
-      "Number of HERE route directions:",
-      hereRoute?.sections[0].actions.length,
-    );
 
-    setGoogleRouteChosen(true);
-    setRouteDetails("google");
-    // setHereRouteChosen(true);
-    // setRouteDetails("here");
+    //if one of the routes could not be retrieved, choose the other one
+    if (!googleRoute || !hereRoute) {
+      if (googleRoute) {
+        setGoogleRouteChosen(true);
+        setRouteDetails("google");
+      } else if (hereRoute) {
+        setHereRouteChosen(true);
+        setRouteDetails("here");
+      }
+      return;
+    }
+
+    //google's route data
+    //duration is a string like "1234s", so parseFloat takes out the number first
+    const googleTime = convertToMinutes(parseFloat(googleRoute.duration));
+    console.log("Google route time:", googleTime);
+    const googleDistance = convertToMiles(googleRoute.distanceMeters);
+    console.log("Google route distance:", googleDistance);
+    let googleFuel = 0;
+    if (mode == "DRIVE") {
+      googleFuel = convertToGallons(
+        googleRoute.travelAdvisory?.fuelConsumptionMicroliters ?? 0,
+        "microliters",
+      );
+      console.log("Google route fuel consumption:", googleFuel);
+    }
+    const googleDirections = googleRoute.legs[0].steps.length;
+    console.log("Number of Google route directions:", googleDirections);
+
+    //here's route data
+    const hereTime = convertToMinutes(hereRoute.sections[0].summary.duration);
+    console.log("HERE route time:", hereTime);
+    const hereDistance = convertToMiles(hereRoute.sections[0].summary.length);
+    console.log("HERE route distance:", hereDistance);
+    let hereFuel = 0;
+    if (mode == "DRIVE") {
+      hereFuel = convertToGallons(
+        hereRoute.sections[0].summary.consumption ?? 0,
+        "liters",
+      );
+      console.log("HERE route fuel consumption:", hereFuel);
+    }
+    const hereDirections = hereRoute.sections[0].actions.length;
+    console.log("Number of HERE route directions:", hereDirections);
+
+    //calculates a route's score using the formula for the chosen mode and priority
+    const calculateScore = (time: number, distance: number, directions: number, fuel: number): number => {
+      let score = 0;
+      // given formulas
+      if (mode == "DRIVE") {
+        if (priority == "time") {
+          score = 0.7 * time + 0.1 * distance + 0.1 * directions + 0.1 * fuel;
+        } else if (priority == "distance") {
+          score = 0.1 * time + 0.7 * distance + 0.1 * directions + 0.1 * fuel;
+        } else if (priority == "directions") {
+          score = 0.1 * time + 0.1 * distance + 0.7 * directions + 0.1 * fuel;
+        } else if (priority == "fuel") {
+          score = 0.1 * time + 0.1 * distance + 0.1 * directions + 0.7 * fuel;
+        }
+        
+      } else {
+        if (priority == "distance") {
+          score = 0.15 * time + 0.7 * distance + 0.15 * directions;
+        } else if (priority == "directions") {
+          score = 0.15 * time + 0.15 * distance + 0.7 * directions;
+        } else {
+          //time, also used if fuel was left selected after switching from driving
+          score = 0.7 * time + 0.15 * distance + 0.15 * directions;
+        }
+      }
+      return score;
+    };
+
+    const googleScore = calculateScore(
+      googleTime,
+      googleDistance,
+      googleDirections,
+      googleFuel,
+    );
+    console.log("Google route score:", googleScore);
+    const hereScore = calculateScore(
+      hereTime,
+      hereDistance,
+      hereDirections,
+      hereFuel,
+    );
+    console.log("HERE route score:", hereScore);
+
+    //the lowest score is the optimal route
+    if (googleScore <= hereScore) {
+      setGoogleRouteChosen(true);
+      setRouteDetails("google");
+    } else {
+      setHereRouteChosen(true);
+      setRouteDetails("here");
+    }
   }
 
   //convert a distance in meters to miles
