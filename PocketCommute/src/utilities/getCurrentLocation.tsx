@@ -11,26 +11,30 @@ export async function getCurrentLocation(
 ) {
   setLoadingLocationAndNearbyPlaces(true);
 
-  //used example from Expo Location documentation as reference: https://docs.expo.dev/versions/latest/sdk/location/
-  let { status } = await Location.requestForegroundPermissionsAsync();
+  try {
+    //used example from Expo Location documentation as reference: https://docs.expo.dev/versions/latest/sdk/location/
+    let { status } = await Location.requestForegroundPermissionsAsync();
 
-  if (status !== "granted") {
-    setErrorMsg("Permission to access location was denied");
+    if (status !== "granted") {
+      setErrorMsg("Permission to access location was denied");
+      setLoadingLocationAndNearbyPlaces(false);
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: 6,
+    });
+
+    setLocation(location);
+
+    await getNearbyPlaces(
+      location.coords.latitude,
+      location.coords.longitude,
+      setNearbyPlaces,
+    );
+
     setLoadingLocationAndNearbyPlaces(false);
-    return;
+  } catch (error) {
+    console.error("Current location retrieval was unsuccessful.", error);
   }
-
-  let location = await Location.getCurrentPositionAsync({
-    accuracy: 6,
-  });
-
-  setLocation(location);
-
-  await getNearbyPlaces(
-    location.coords.latitude,
-    location.coords.longitude,
-    setNearbyPlaces,
-  );
-
-  setLoadingLocationAndNearbyPlaces(false);
 }

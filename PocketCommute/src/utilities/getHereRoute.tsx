@@ -71,20 +71,23 @@ export async function getHereRoute(
     }
   }
 
-  const response = await fetch(
-    `https://router.hereapi.com/v8/routes?${params.toString()}`,
-  );
+  try {
+    const response = await fetch(
+      `https://router.hereapi.com/v8/routes?${params.toString()}`,
+    );
 
-  const hereRouteData = await response.json();
+    if (!response.ok) {
+      throw new Error(`${response.status}`);
+    }
 
-  if (!response.ok) {
-    console.log("Route retrieval was unsuccessful.");
-    return;
+    const hereRouteData = await response.json();
+
+    //console.log("route data: ", hereRouteData.routes);
+    retrievedRoute = hereRouteData.routes;
+
+    setHereRoute(retrievedRoute[0]);
+    setRetrievingHereRoute(false);
+  } catch (error) {
+    console.log("HERE route retrieval was unsuccessful.", error);
   }
-
-  //console.log("route data: ", hereRouteData.routes);
-  retrievedRoute = hereRouteData.routes;
-
-  setHereRoute(retrievedRoute[0]);
-  setRetrievingHereRoute(false);
 }

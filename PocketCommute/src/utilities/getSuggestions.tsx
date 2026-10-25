@@ -23,7 +23,15 @@ export async function getSuggestions(
     `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&limit=5&bias=proximity:${longitude},${latitude}&apiKey=${GEOAPIFY_KEY}`,
     requestOptions,
   )
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`${response.status}`);
+      }
+
+      return response.json();
+    })
     .then((result) => setSuggestions(result.features || []))
-    .catch((error) => console.log("error", error));
+    .catch((error) =>
+      console.log("Suggestions retrieval was unsuccessful.", error),
+    );
 }
