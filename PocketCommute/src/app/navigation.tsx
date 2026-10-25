@@ -60,21 +60,21 @@ export default function navigation() {
     mode,
     avoidHighways,
     avoidTolls,
-    search,
     currentLocationLatitude,
     currentLocationLongitude,
     destinationLatitude,
     destinationLongitude,
+    destinationName,
   } = useLocalSearchParams() as {
     priority: string;
     mode: string;
     avoidHighways: string;
     avoidTolls: string;
-    search: string;
     currentLocationLatitude: string;
     currentLocationLongitude: string;
     destinationLatitude: string;
     destinationLongitude: string;
+    destinationName: string;
   };
 
   //convert to original data types
@@ -341,7 +341,7 @@ export default function navigation() {
             latitude: destinationLat,
             longitude: destinationLong,
           }}
-          title={search}
+          title={destinationName}
           pinColor="red"
         />
 

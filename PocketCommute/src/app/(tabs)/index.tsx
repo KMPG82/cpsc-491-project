@@ -35,7 +35,6 @@ export default function App() {
 
   const [currentLocation, setCurrentLocation] =
     useState<Location.LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
   const [loadingLocationAndNearbyPlaces, setLoadingLocationAndNearbyPlaces] =
@@ -51,18 +50,10 @@ export default function App() {
   useEffect(() => {
     getCurrentLocation(
       setCurrentLocation,
-      setErrorMsg,
       setNearbyPlaces,
       setLoadingLocationAndNearbyPlaces,
     );
   }, []);
-
-  let text = "Waiting...";
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (currentLocation) {
-    text = JSON.stringify(currentLocation);
-  }
 
   //show loading indicator while fetching location and nearby places
   if (!currentLocation || loadingLocationAndNearbyPlaces) {
@@ -156,6 +147,7 @@ export default function App() {
               //   currentLocation.coords.longitude,
               //   destination.geometry.coordinates[1],
               //   destination.geometry.coordinates[0],
+              //   destination.properties.name,
               // );
 
               router.push({
@@ -165,7 +157,6 @@ export default function App() {
                   mode,
                   avoidHighways: String(avoidHighways),
                   avoidTolls: String(avoidTolls),
-                  search,
                   currentLocationLatitude: String(
                     currentLocation.coords.latitude,
                   ),
@@ -178,6 +169,7 @@ export default function App() {
                   destinationLongitude: String(
                     destination.geometry.coordinates[0],
                   ),
+                  destinationName: destination.properties.name,
                 },
               });
             }}

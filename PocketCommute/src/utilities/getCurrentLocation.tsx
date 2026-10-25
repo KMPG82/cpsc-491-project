@@ -5,7 +5,6 @@ import { getNearbyPlaces } from "./getNearbyPlaces";
 //get the user's current location and call getNearbyPlaces
 export async function getCurrentLocation(
   setLocation: (location: Location.LocationObject) => void,
-  setErrorMsg: (message: string) => void,
   setNearbyPlaces: (places: any[]) => void,
   setLoadingLocationAndNearbyPlaces: (loading: boolean) => void,
 ) {
@@ -16,9 +15,7 @@ export async function getCurrentLocation(
     let { status } = await Location.requestForegroundPermissionsAsync();
 
     if (status !== "granted") {
-      setErrorMsg("Permission to access location was denied");
-      setLoadingLocationAndNearbyPlaces(false);
-      return;
+      throw new Error(`${status}`);
     }
 
     let location = await Location.getCurrentPositionAsync({
