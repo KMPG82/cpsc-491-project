@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Alert } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -97,6 +98,8 @@ export default function navigation() {
   const [hereRouteChosen, setHereRouteChosen] = useState<boolean>(false);
 
   const [routeDetails, setRouteDetails] = useState<"google" | "here">("google");
+
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   /*TODO:
       1. complete the normalize function, more details above the function
@@ -280,6 +283,7 @@ export default function navigation() {
       shouldAvoidTolls,
       setRetrievingGoogleRoute,
       setGoogleRoute,
+      setErrorMessage,
     );
     getHereRoute(
       currentLocationLat,
@@ -291,6 +295,7 @@ export default function navigation() {
       shouldAvoidTolls,
       setRetrievingHereRoute,
       setHereRoute,
+      setErrorMessage,
     );
   }, []);
 
@@ -304,6 +309,23 @@ export default function navigation() {
       );
     }
   }, [googleRoute, hereRoute]);
+
+  useEffect(() => {
+    if (errorMessage) {
+      Alert.alert("ERROR", errorMessage, [{ text: "OK" }]);
+    }
+  }, [errorMessage]);
+
+  //show error message if any occur during API requests
+  if (errorMessage) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.centerText}>{errorMessage}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (retrievingGoogleRoute || retrievingHereRoute) {
     return (
@@ -516,5 +538,8 @@ const styles = StyleSheet.create({
   changeRouteDetailsButtonContainer: {
     flexDirection: "row",
     justifyContent: "center",
+  },
+  centerText: {
+    textAlign: "center",
   },
 });

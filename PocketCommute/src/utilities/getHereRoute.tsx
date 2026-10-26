@@ -29,6 +29,7 @@ export async function getHereRoute(
   shouldAvoidTolls: boolean,
   setRetrievingHereRoute: (retrieving: boolean) => void,
   setHereRoute: (route: HereRoute | null) => void,
+  setErrorMessage: (message: string) => void,
 ) {
   let retrievedRoute: HereRoute[] = [];
 
@@ -89,5 +90,8 @@ export async function getHereRoute(
     setRetrievingHereRoute(false);
   } catch (error) {
     console.log("HERE route retrieval was unsuccessful.", error);
+    setErrorMessage(
+      "Could not retrieve HERE route. Please reload the application.",
+    );
   }
 }

@@ -33,6 +33,7 @@ export async function getGoogleRoute(
   shouldAvoidTolls: boolean,
   setRetrievingGoogleRoute: (retrieving: boolean) => void,
   setGoogleRoute: (route: GoogleRoute | null) => void,
+  setErrorMessage: (message: string) => void,
 ) {
   try {
     let retrievedRoute: GoogleRoute[] = [];
@@ -134,5 +135,8 @@ export async function getGoogleRoute(
     setRetrievingGoogleRoute(false);
   } catch (error) {
     console.log("Google route retrieval was unsuccessful.", error);
+    setErrorMessage(
+      "Could not retrieve Google route. Please reload the application.",
+    );
   }
 }
