@@ -1,4 +1,3 @@
-import * as Location from 'expo-location';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,21 +9,13 @@ import {
   View
 } from 'react-native';
 
-type Destination = {
-  address: string;
-  latitude: number;
-  longitude: number;
-};
-
-// TODO: open uber with destination
-function openUber() {}
-
-// TODO: open lyft with destination
-function openLyft() {}
+import type { Location } from '@/types/location';
+import { geocodeDestination } from '@/utilities/location';
+import { lyftUrls, openRideApp, uberUrls } from '@/utilities/rideshare';
 
 export default function HomeScreen() {
   const [input, setInput] = useState<string>('');
-  const [destination, setDestination] = useState<Destination | null>(null);
+  const [destination, setDestination] = useState<Location | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleConfirm = async () => {
@@ -36,14 +27,13 @@ export default function HomeScreen() {
     Keyboard.dismiss();
     setLoading(true);
     try {
-      const results = await Location.geocodeAsync(address);
-      if (!results.length) {
+      const result = await geocodeDestination(address);
+      if (!result) {
         setDestination(null);
         Alert.alert('Address not found', 'Try adding the city and state.');
         return;
       }
-      const { latitude, longitude } = results[0];
-      setDestination({ address, latitude, longitude });
+      setDestination(result);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       Alert.alert('Could not look up that address', message);
@@ -55,6 +45,20 @@ export default function HomeScreen() {
   const handleChange = (text: string) => {
     setInput(text);
     setDestination(null); // editing invalidates the confirmed address
+  };
+
+  const handleOpenRide = async (provider: 'Uber' | 'Lyft') => {
+    if (!destination) return;
+
+    try {
+      const urls = provider === 'Uber' ? uberUrls(destination) : lyftUrls(destination);
+      await openRideApp(urls);
+    } catch {
+      Alert.alert(
+        `Could not open ${provider}`,
+        'Could not open the app or its website. Please try again.'
+      );
+    }
   };
 
   return (
@@ -80,12 +84,12 @@ export default function HomeScreen() {
 
       {destination && (
         <>
-          <Text style={styles.confirmed}>Going to: {destination.address}</Text>
+          <Text style={styles.confirmed}>Going to: {destination.formattedAddress}</Text>
           <View style={styles.btn}>
-            <Button title="Open Uber" onPress={() => openUber()} />
+            <Button title="Open Uber" onPress={() => handleOpenRide('Uber')} />
           </View>
           <View style={styles.btn}>
-            <Button title="Open Lyft" onPress={() => openLyft()} />
+            <Button title="Open Lyft" onPress={() => handleOpenRide('Lyft')} />
           </View>
         </>
       )}
