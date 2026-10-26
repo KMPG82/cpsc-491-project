@@ -8,6 +8,7 @@ export async function getSuggestions(
   searchQuery: string,
   longitude: number,
   latitude: number,
+  setErrorMessage: (message: string) => void,
 ) {
   if (!searchQuery.trim()) {
     setSuggestions([]);
@@ -31,7 +32,10 @@ export async function getSuggestions(
       return response.json();
     })
     .then((result) => setSuggestions(result.features || []))
-    .catch((error) =>
-      console.log("Suggestions retrieval was unsuccessful.", error),
-    );
+    .catch((error) => {
+      (console.log("Suggestions retrieval was unsuccessful.", error),
+        setErrorMessage(
+          "Could not retrieve suggestions. Please reload the application.",
+        ));
+    });
 }

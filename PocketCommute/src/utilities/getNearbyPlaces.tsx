@@ -7,6 +7,7 @@ export async function getNearbyPlaces(
   latitude: number,
   longitude: number,
   setNearbyPlaces: (places: any[]) => void,
+  setErrorMessage: (message: string) => void,
 ) {
   //used example from Geoapify Places API documentation as reference: https://apidocs.geoapify.com/docs/places/
   const requestOptions = {
@@ -25,7 +26,10 @@ export async function getNearbyPlaces(
       return response.json();
     })
     .then((result) => setNearbyPlaces(result.features || []))
-    .catch((error) =>
-      console.log("Nearby places retrieval was unsuccessful", error),
-    );
+    .catch((error) => {
+      (console.log("Nearby places retrieval was unsuccessful", error),
+        setErrorMessage(
+          "Could not retrieve nearby locations. Please reload the application.",
+        ));
+    });
 }

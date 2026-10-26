@@ -7,6 +7,7 @@ export async function getCurrentLocation(
   setLocation: (location: Location.LocationObject) => void,
   setNearbyPlaces: (places: any[]) => void,
   setLoadingLocationAndNearbyPlaces: (loading: boolean) => void,
+  setErrorMessage: (message: string) => void,
 ) {
   setLoadingLocationAndNearbyPlaces(true);
 
@@ -28,10 +29,14 @@ export async function getCurrentLocation(
       location.coords.latitude,
       location.coords.longitude,
       setNearbyPlaces,
+      setErrorMessage,
     );
 
     setLoadingLocationAndNearbyPlaces(false);
   } catch (error) {
     console.error("Current location retrieval was unsuccessful.", error);
+    setErrorMessage(
+      "Could not determine current location. Please reload the application.",
+    );
   }
 }

@@ -1,5 +1,5 @@
 import MapView, { Marker } from "react-native-maps";
-import { StyleSheet, View, Pressable } from "react-native";
+import { StyleSheet, View, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
@@ -45,6 +45,8 @@ export default function App() {
 
   const [destination, setDestination] = useState<any | null>(null);
 
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
   const router = useRouter();
 
   useEffect(() => {
@@ -52,8 +54,26 @@ export default function App() {
       setCurrentLocation,
       setNearbyPlaces,
       setLoadingLocationAndNearbyPlaces,
+      setErrorMessage,
     );
   }, []);
+
+  useEffect(() => {
+    if (errorMessage) {
+      Alert.alert("ERROR", errorMessage, [{ text: "OK" }]);
+    }
+  }, [errorMessage]);
+
+  //show error message if any occur during API requests
+  if (errorMessage) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.centerText}>{errorMessage}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   //show loading indicator while fetching location and nearby places
   if (!currentLocation || loadingLocationAndNearbyPlaces) {
@@ -61,7 +81,7 @@ export default function App() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
-          <Text>Loading...</Text>
+          <Text style={styles.centerText}>Loading...</Text>
         </View>
       </SafeAreaView>
     );
@@ -94,6 +114,7 @@ export default function App() {
                     text,
                     currentLocation.coords.longitude,
                     currentLocation.coords.latitude,
+                    setErrorMessage,
                   );
                 }, 500);
               }}
@@ -403,5 +424,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#999999",
+  },
+  centerText: {
+    textAlign: "center",
   },
 });
