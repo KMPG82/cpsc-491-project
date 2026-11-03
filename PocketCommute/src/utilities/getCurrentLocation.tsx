@@ -31,12 +31,12 @@ export async function getCurrentLocation(
       setNearbyPlaces,
       setErrorMessage,
     );
-
-    setLoadingLocationAndNearbyPlaces(false);
   } catch (error) {
     console.error("Current location retrieval was unsuccessful.", error);
     setErrorMessage(
       "Could not determine current location. Please reload the application.",
     );
+  } finally {
+    setLoadingLocationAndNearbyPlaces(false);
   }
 }

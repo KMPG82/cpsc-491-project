@@ -101,6 +101,19 @@ export default function navigation() {
 
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const [convertedGoogleTime, setConvertedGoogleTime] = useState<number>(0);
+  const [convertedGoogleDistance, setConvertedGoogleDistance] =
+    useState<number>(0);
+  const [convertedGoogleFuel, setConvertedGoogleFuel] = useState<number>(0);
+  const [numberOfGoogleDirections, setNumberOfGoogleDirections] =
+    useState<number>(0);
+
+  const [convertedHereTime, setConvertedHereTime] = useState<number>(0);
+  const [convertedHereDistance, setConvertedHereDistance] = useState<number>(0);
+  const [convertedHereFuel, setConvertedHereFuel] = useState<number>(0);
+  const [numberOfHereDirections, setNumberOfHereDirections] =
+    useState<number>(0);
+
   /*TODO:
       1. complete the normalize function, more details above the function
       2. use the normalize function to calculate the normalized values for each factor for both routes
@@ -191,14 +204,14 @@ export default function navigation() {
   //convert a distance in meters to miles
   const convertToMiles = (distanceInMeters: number): number => {
     //1 mile = 1609.344 meters
-    let distanceInMiles = distanceInMeters / 1609.344;
+    let distanceInMiles = Number((distanceInMeters / 1609.344).toFixed(1));
     return distanceInMiles;
   };
 
   //convert a time in seconds to minutes
   const convertToMinutes = (timeInSeconds: number): number => {
     //1 minute = 60 seconds
-    let timeInMinutes = timeInSeconds / 60;
+    let timeInMinutes = Math.round(timeInSeconds / 60);
     return timeInMinutes;
   };
 
@@ -214,8 +227,20 @@ export default function navigation() {
     }
 
     //1 gallon = 3.785411784 liters
-    let fuelInGallons = fuelInLiters / 3.785411784;
+    let fuelInGallons = Number((fuelInLiters / 3.785411784).toFixed(1));
     return fuelInGallons;
+  };
+
+  const modifyHereInstruction = (instruction: string | undefined) => {
+    if (!instruction) {
+      return instruction;
+    } else {
+      return instruction.replace(
+        /Go for ([\d.]+) m/,
+        (matchedSegment, distanceInMeters) =>
+          `Go for ${convertToMiles(Number(distanceInMeters))} mi.`,
+      );
+    }
   };
 
   //calculates a route's score using the formula for the chosen mode and priority
@@ -300,6 +325,40 @@ export default function navigation() {
   }, []);
 
   useEffect(() => {
+    if (googleRoute && !retrievingGoogleRoute) {
+      setConvertedGoogleTime(
+        convertToMinutes(parseFloat(googleRoute.duration)),
+      );
+      setConvertedGoogleDistance(convertToMiles(googleRoute.distanceMeters));
+      if (mode == "DRIVE") {
+        setConvertedGoogleFuel(
+          convertToGallons(
+            googleRoute.travelAdvisory?.fuelConsumptionMicroliters ?? 0,
+            "microliters",
+          ),
+        );
+      }
+      setNumberOfGoogleDirections(googleRoute.legs[0].steps.length);
+    }
+
+    if (hereRoute && !retrievingHereRoute) {
+      setConvertedHereTime(
+        convertToMinutes(hereRoute.sections[0].summary.duration),
+      );
+      setConvertedHereDistance(
+        convertToMiles(hereRoute.sections[0].summary.length),
+      );
+      if (mode == "DRIVE") {
+        setConvertedHereFuel(
+          convertToGallons(
+            hereRoute.sections[0].summary.consumption ?? 0,
+            "liters",
+          ),
+        );
+      }
+      setNumberOfHereDirections(hereRoute.sections[0].actions.length);
+    }
+
     if (!retrievingGoogleRoute && !retrievingHereRoute) {
       evaluateRoutes(
         googleRoute,
@@ -425,21 +484,20 @@ export default function navigation() {
           <>
             <Text variant="headlineMedium">Google Route Details</Text>
 
-            <Text variant="bodyLarge">Duration: {googleRoute.duration}</Text>
+            <Text variant="bodyLarge">Duration: {convertedGoogleTime} min</Text>
 
             <Text variant="bodyLarge">
-              Distance: {googleRoute.distanceMeters}m
+              Distance: {convertedGoogleDistance} mi
             </Text>
 
             <Text variant="bodyLarge">
-              Number of Directions: {googleRoute.legs[0].steps.length}
+              Number of Directions: {numberOfGoogleDirections}
             </Text>
 
             {mode === "DRIVE" &&
               googleRoute.travelAdvisory?.fuelConsumptionMicroliters && (
                 <Text variant="bodyLarge">
-                  Estimated Fuel:{" "}
-                  {googleRoute.travelAdvisory?.fuelConsumptionMicroliters}
+                  Estimated Fuel: {convertedGoogleFuel} gal
                 </Text>
               )}
 
@@ -453,8 +511,8 @@ export default function navigation() {
                   </Text>
 
                   <Text variant="bodyLarge">
-                    {step.navigationInstruction.instructions}, go for{" "}
-                    {step.distanceMeters}m
+                    {step.navigationInstruction.instructions}. Go for{" "}
+                    {convertToMiles(step.distanceMeters)} mi.
                   </Text>
                 </View>
               </View>
@@ -466,21 +524,19 @@ export default function navigation() {
           <>
             <Text variant="headlineMedium">HERE Route Details</Text>
 
+            <Text variant="bodyLarge">Duration: {convertedHereTime} min</Text>
+
             <Text variant="bodyLarge">
-              Duration: {hereRoute.sections[0].summary.duration}
+              Distance: {convertedHereDistance} mi
             </Text>
 
             <Text variant="bodyLarge">
-              Distance: {hereRoute.sections[0].summary.length}m
-            </Text>
-
-            <Text variant="bodyLarge">
-              Number of Directions: {hereRoute.sections[0].actions.length}
+              Number of Directions: {numberOfHereDirections}
             </Text>
 
             {mode === "DRIVE" && hereRoute.sections[0].summary.consumption && (
               <Text variant="bodyLarge">
-                Estimated Fuel: {hereRoute.sections[0].summary.consumption}L
+                Estimated Fuel: {convertedHereFuel} gal
               </Text>
             )}
 
@@ -493,7 +549,9 @@ export default function navigation() {
                     {index + 1}.
                   </Text>
 
-                  <Text variant="bodyLarge"> {action.instruction}</Text>
+                  <Text variant="bodyLarge">
+                    {modifyHereInstruction(action.instruction)}
+                  </Text>
                 </View>
               </View>
             ))}
