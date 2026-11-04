@@ -21,7 +21,7 @@ export async function getSuggestions(
   };
 
   fetch(
-    `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&limit=5&bias=proximity:${longitude},${latitude}&apiKey=${GEOAPIFY_KEY}`,
+    `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&limit=5&bias=proximity:${longitude},${latitude}&lang=en&filter=countrycode:us&apiKey=${GEOAPIFY_KEY}`,
     requestOptions,
   )
     .then((response) => {
