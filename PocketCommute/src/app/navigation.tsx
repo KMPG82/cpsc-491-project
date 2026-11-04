@@ -179,7 +179,7 @@ export default function navigation() {
     }
     const numberOfHereDirections = hereRoute.sections[0].actions.length;
     //console.log("Number of HERE route directions:", numberOfHereDirections);
-
+    
     //TODO: use the normalized values for each factor as parameters for calling calculateScore
     const googleScore = calculateScore(
       googleTimeMinutes,
@@ -299,7 +299,14 @@ export default function navigation() {
         normalizedGoogleTime = normalize(googleTime, hereTime)
         normalizedHereTime = normalize(hereTime, googleTime)
   */
-  const normalize = (value1: number, value2: number) => {};
+  const normalize = (value1: number, value2: number) => {
+    const max = Math.max(value1, value2);
+    if (max === 0) {
+      return 0; // prevents division by zero
+    }
+
+    return value1 / max;
+  };
 
   //happens everytime a usestate var is changed, which causes the screen to re-render
   let googleCoordinates: Coordinate[] = [];
