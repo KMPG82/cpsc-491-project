@@ -8,13 +8,17 @@ import { View, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 
 import { getGoogleRoute } from "../utilities/getGoogleRoute";
 import { getHereRoute } from "../utilities/getHereRoute";
+import { modifyHereInstruction } from "../utilities/modifyHereInstruction";
+import { calculateFuelConsumptionEstimate } from "../utilities/calculateFuelConsumptionEstimate";
 import {
   decodeGooglePolyline,
   decodeHerePolyline,
 } from "../utilities/decodePolyline";
-
-//using 25.6 as the average mpg according to: https://afdc.energy.gov/data/10310
-const MPG = 25.6;
+import {
+  convertToMinutes,
+  convertToMiles,
+  convertToGallons,
+} from "../utilities/conversions";
 
 type GoogleRoute = {
   distanceMeters: number;
@@ -236,58 +240,6 @@ export default function navigation() {
       setRouteDetails("here");
     }
   }
-
-  //convert a distance in meters to miles
-  const convertToMiles = (distanceInMeters: number): number => {
-    //1 mile = 1609.344 meters
-    let distanceInMiles = Number((distanceInMeters / 1609.344).toFixed(1));
-    return distanceInMiles;
-  };
-
-  //convert a time in seconds to minutes
-  const convertToMinutes = (timeInSeconds: number): number => {
-    //1 minute = 60 seconds
-    let timeInMinutes = Math.round(timeInSeconds / 60);
-    return timeInMinutes;
-  };
-
-  //convert fuel consumption to gallons, google gives microliters and here gives liters
-  const convertToGallons = (
-    fuel: number,
-    unit: "microliters" | "liters",
-  ): number => {
-    let fuelInLiters = fuel;
-    if (unit === "microliters") {
-      //1 liter = 1,000,000 microliters
-      fuelInLiters = fuel / 1000000;
-    }
-
-    //1 gallon = 3.785411784 liters
-    let fuelInGallons = Number((fuelInLiters / 3.785411784).toFixed(2));
-    return fuelInGallons;
-  };
-
-  //takes out the "Go for [meters]" part of HERE route instruction
-  const modifyHereInstruction = (instruction: string | undefined) => {
-    if (!instruction) {
-      return instruction;
-    } else {
-      return instruction.replace(
-        /Go for ([\d.]+) m/,
-        (matchedSegment, distanceInMeters) =>
-          `Go for ${convertToMiles(Number(distanceInMeters))} mi`,
-      );
-    }
-  };
-
-  //calculates estimated fuel consumption
-  const calculateFuelConsumptionEstimate = (distanceMeters: number): number => {
-    const distanceMiles = convertToMiles(distanceMeters);
-
-    const estimatedFuelConsumption = Number((distanceMiles / MPG).toFixed(2));
-
-    return estimatedFuelConsumption;
-  };
 
   //calculates a route's score using the formula for the chosen mode and priority
   const calculateScore = (
