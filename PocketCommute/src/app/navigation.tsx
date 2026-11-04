@@ -179,18 +179,30 @@ export default function navigation() {
     }
     const numberOfHereDirections = hereRoute.sections[0].actions.length;
     //console.log("Number of HERE route directions:", numberOfHereDirections);
-    
+
     // Normalized values for Time in minutes
     const normalizedGoogleTime = normalize(googleTimeMinutes, hereTimeMinutes);
     const normalizedHereTime = normalize(hereTimeMinutes, googleTimeMinutes);
 
     // Normalized values for distance in miles
-    const normalizedGoogleDistance = normalize(googleDistanceMiles, hereDistanceMiles);
-    const normalizedHereDistance = normalize(hereDistanceMiles, googleDistanceMiles);
+    const normalizedGoogleDistance = normalize(
+      googleDistanceMiles,
+      hereDistanceMiles,
+    );
+    const normalizedHereDistance = normalize(
+      hereDistanceMiles,
+      googleDistanceMiles,
+    );
 
     //// Normalized values for Directions
-    const normalizedGoogleDirections = normalize(numberOfGoogleDirections, numberOfHereDirections);
-    const normalizedHereDirections = normalize(numberOfHereDirections, numberOfGoogleDirections);
+    const normalizedGoogleDirections = normalize(
+      numberOfGoogleDirections,
+      numberOfHereDirections,
+    );
+    const normalizedHereDirections = normalize(
+      numberOfHereDirections,
+      numberOfGoogleDirections,
+    );
 
     let normalizedGoogleFuel = 0;
     let normalizedHereFuel = 0;
@@ -263,7 +275,7 @@ export default function navigation() {
       return instruction.replace(
         /Go for ([\d.]+) m/,
         (matchedSegment, distanceInMeters) =>
-          `Go for ${convertToMiles(Number(distanceInMeters))} mi.`,
+          `Go for ${convertToMiles(Number(distanceInMeters))} mi`,
       );
     }
   };
@@ -552,7 +564,7 @@ export default function navigation() {
 
                   <Text variant="bodyLarge">
                     {step.navigationInstruction.instructions}. Go for{" "}
-                    {convertToMiles(step.distanceMeters)} mi.
+                    {convertToMiles(step.distanceMeters)} mi
                   </Text>
                 </View>
               </View>
