@@ -13,6 +13,9 @@ import {
   decodeHerePolyline,
 } from "../utilities/decodePolyline";
 
+//using 25.6 as the average mpg according to: https://afdc.energy.gov/data/10310
+const MPG = 25.6;
+
 type GoogleRoute = {
   distanceMeters: number;
   duration: string;
@@ -142,52 +145,56 @@ export default function navigation() {
 
     //google's route data
     //duration is a string like "1234s", so parseFloat takes out the number first
-    const googleTime = convertToMinutes(parseFloat(googleRoute.duration));
-    console.log("Google route time:", googleTime);
-    const googleDistance = convertToMiles(googleRoute.distanceMeters);
-    console.log("Google route distance:", googleDistance);
-    let googleFuel = 0;
+    const googleTimeMinutes = convertToMinutes(
+      parseFloat(googleRoute.duration),
+    );
+    //console.log("Google route time:", googleTimeMinutes);
+    const googleDistanceMiles = convertToMiles(googleRoute.distanceMeters);
+    //console.log("Google route distance:", googleDistanceMiles);
+    let googleFuelGallons = 0;
     if (mode == "DRIVE") {
-      googleFuel = convertToGallons(
-        googleRoute.travelAdvisory?.fuelConsumptionMicroliters ?? 0,
-        "microliters",
+      googleFuelGallons = calculateFuelConsumptionEstimate(
+        googleRoute.distanceMeters,
       );
-      console.log("Google route fuel consumption:", googleFuel);
+      //console.log("Google route fuel consumption:", googleFuelGallons);
     }
-    const googleDirections = googleRoute.legs[0].steps.length;
-    console.log("Number of Google route directions:", googleDirections);
+    const numberOfGoogleDirections = googleRoute.legs[0].steps.length;
+    //console.log("Number of Google route directions:", numberOfGoogleDirections);
 
     //here's route data
-    const hereTime = convertToMinutes(hereRoute.sections[0].summary.duration);
-    console.log("HERE route time:", hereTime);
-    const hereDistance = convertToMiles(hereRoute.sections[0].summary.length);
-    console.log("HERE route distance:", hereDistance);
-    let hereFuel = 0;
+    const hereTimeMinutes = convertToMinutes(
+      hereRoute.sections[0].summary.duration,
+    );
+    //console.log("HERE route time:", hereTimeMinutes);
+    const hereDistanceMiles = convertToMiles(
+      hereRoute.sections[0].summary.length,
+    );
+    //console.log("HERE route distance:", hereDistanceMiles);
+    let hereFuelGallons = 0;
     if (mode == "DRIVE") {
-      hereFuel = convertToGallons(
-        hereRoute.sections[0].summary.consumption ?? 0,
-        "liters",
+      hereFuelGallons = calculateFuelConsumptionEstimate(
+        hereRoute.sections[0].summary.length,
       );
-      console.log("HERE route fuel consumption:", hereFuel);
+      //console.log("HERE route fuel consumption:", hereFuelGallons);
     }
-    const hereDirections = hereRoute.sections[0].actions.length;
-    console.log("Number of HERE route directions:", hereDirections);
+    const numberOfHereDirections = hereRoute.sections[0].actions.length;
+    //console.log("Number of HERE route directions:", numberOfHereDirections);
 
     //TODO: use the normalized values for each factor as parameters for calling calculateScore
     const googleScore = calculateScore(
-      googleTime,
-      googleDistance,
-      googleDirections,
-      googleFuel,
+      googleTimeMinutes,
+      googleDistanceMiles,
+      numberOfGoogleDirections,
+      googleFuelGallons,
     );
     console.log("Google route score:", googleScore);
 
     //TODO: use the normalized values for each factor as parameters for calling calculateScore
     const hereScore = calculateScore(
-      hereTime,
-      hereDistance,
-      hereDirections,
-      hereFuel,
+      hereTimeMinutes,
+      hereDistanceMiles,
+      numberOfHereDirections,
+      hereFuelGallons,
     );
     console.log("HERE route score:", hereScore);
 
@@ -227,10 +234,11 @@ export default function navigation() {
     }
 
     //1 gallon = 3.785411784 liters
-    let fuelInGallons = Number((fuelInLiters / 3.785411784).toFixed(1));
+    let fuelInGallons = Number((fuelInLiters / 3.785411784).toFixed(2));
     return fuelInGallons;
   };
 
+  //takes out the "Go for [meters]" part of HERE route instruction
   const modifyHereInstruction = (instruction: string | undefined) => {
     if (!instruction) {
       return instruction;
@@ -241,6 +249,15 @@ export default function navigation() {
           `Go for ${convertToMiles(Number(distanceInMeters))} mi.`,
       );
     }
+  };
+
+  //calculates estimated fuel consumption
+  const calculateFuelConsumptionEstimate = (distanceMeters: number): number => {
+    const distanceMiles = convertToMiles(distanceMeters);
+
+    const estimatedFuelConsumption = Number((distanceMiles / MPG).toFixed(2));
+
+    return estimatedFuelConsumption;
   };
 
   //calculates a route's score using the formula for the chosen mode and priority
@@ -330,14 +347,13 @@ export default function navigation() {
         convertToMinutes(parseFloat(googleRoute.duration)),
       );
       setConvertedGoogleDistance(convertToMiles(googleRoute.distanceMeters));
+
       if (mode == "DRIVE") {
         setConvertedGoogleFuel(
-          convertToGallons(
-            googleRoute.travelAdvisory?.fuelConsumptionMicroliters ?? 0,
-            "microliters",
-          ),
+          calculateFuelConsumptionEstimate(googleRoute.distanceMeters),
         );
       }
+
       setNumberOfGoogleDirections(googleRoute.legs[0].steps.length);
     }
 
@@ -348,11 +364,11 @@ export default function navigation() {
       setConvertedHereDistance(
         convertToMiles(hereRoute.sections[0].summary.length),
       );
+
       if (mode == "DRIVE") {
         setConvertedHereFuel(
-          convertToGallons(
-            hereRoute.sections[0].summary.consumption ?? 0,
-            "liters",
+          calculateFuelConsumptionEstimate(
+            hereRoute.sections[0].summary.length,
           ),
         );
       }
@@ -490,16 +506,16 @@ export default function navigation() {
               Distance: {convertedGoogleDistance} mi
             </Text>
 
-            <Text variant="bodyLarge">
-              Number of Directions: {numberOfGoogleDirections}
-            </Text>
-
             {mode === "DRIVE" &&
               googleRoute.travelAdvisory?.fuelConsumptionMicroliters && (
                 <Text variant="bodyLarge">
                   Estimated Fuel: {convertedGoogleFuel} gal
                 </Text>
               )}
+
+            <Text variant="bodyLarge">
+              Number of Directions: {numberOfGoogleDirections}
+            </Text>
 
             <Text variant="headlineMedium">Directions</Text>
 
@@ -530,15 +546,15 @@ export default function navigation() {
               Distance: {convertedHereDistance} mi
             </Text>
 
-            <Text variant="bodyLarge">
-              Number of Directions: {numberOfHereDirections}
-            </Text>
-
             {mode === "DRIVE" && hereRoute.sections[0].summary.consumption && (
               <Text variant="bodyLarge">
                 Estimated Fuel: {convertedHereFuel} gal
               </Text>
             )}
+
+            <Text variant="bodyLarge">
+              Number of Directions: {numberOfHereDirections}
+            </Text>
 
             <Text variant="headlineMedium">Directions</Text>
 
