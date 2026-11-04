@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,16 +18,26 @@ export default function HomeScreen() {
   const [destination, setDestination] = useState<Location | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const lookupVersion = useRef(0);
+  const activeLookup = useRef<number | null>(null);
+
+  useEffect(() => () => { lookupVersion.current += 1; }, []);
+
   const handleConfirm = async () => {
+    if (activeLookup.current !== null) return;
     const address = input.trim();
     if (!address) {
       Alert.alert('Enter an address first');
       return;
     }
     Keyboard.dismiss();
+    const version = ++lookupVersion.current;
+    activeLookup.current = version;
+    setDestination(null);
     setLoading(true);
     try {
       const result = await geocodeDestination(address);
+      if (version !== lookupVersion.current) return;
       if (!result) {
         setDestination(null);
         Alert.alert('Address not found', 'Try adding the city and state.');
@@ -35,14 +45,19 @@ export default function HomeScreen() {
       }
       setDestination(result);
     } catch (e) {
+      if (version !== lookupVersion.current) return;
       const message = e instanceof Error ? e.message : String(e);
       Alert.alert('Could not look up that address', message);
     } finally {
-      setLoading(false);
+      if (activeLookup.current === version) activeLookup.current = null;
+      if (version === lookupVersion.current) setLoading(false);
     }
   };
 
   const handleChange = (text: string) => {
+    lookupVersion.current += 1;
+    activeLookup.current = null;
+    setLoading(false);
     setInput(text);
     setDestination(null); // editing invalidates the confirmed address
   };
@@ -84,7 +99,9 @@ export default function HomeScreen() {
 
       {destination && (
         <>
-          <Text style={styles.confirmed}>Going to: {destination.formattedAddress}</Text>
+          <Text style={styles.confirmed}>Resolved near: {destination.formattedAddress}{'\n'}
+            Coordinates: {destination.latitude}, {destination.longitude}{'\n'}
+            Check the destination pin in Uber or Lyft before requesting a ride.</Text>
           <View style={styles.btn}>
             <Button title="Open Uber" onPress={() => handleOpenRide('Uber')} />
           </View>
