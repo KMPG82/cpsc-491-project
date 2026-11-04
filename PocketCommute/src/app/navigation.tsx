@@ -180,21 +180,38 @@ export default function navigation() {
     const numberOfHereDirections = hereRoute.sections[0].actions.length;
     //console.log("Number of HERE route directions:", numberOfHereDirections);
     
-    //TODO: use the normalized values for each factor as parameters for calling calculateScore
+    // Normalized values for Time in minutes
+    const normalizedGoogleTime = normalize(googleTimeMinutes, hereTimeMinutes);
+    const normalizedHereTime = normalize(hereTimeMinutes, googleTimeMinutes);
+
+    // Normalized values for distance in miles
+    const normalizedGoogleDistance = normalize(googleDistanceMiles, hereDistanceMiles);
+    const normalizedHereDistance = normalize(hereDistanceMiles, googleDistanceMiles);
+
+    //// Normalized values for Directions
+    const normalizedGoogleDirections = normalize(numberOfGoogleDirections, numberOfHereDirections);
+    const normalizedHereDirections = normalize(numberOfHereDirections, numberOfGoogleDirections);
+
+    let normalizedGoogleFuel = 0;
+    let normalizedHereFuel = 0;
+    if (mode === "DRIVE") {
+      normalizedGoogleFuel = normalize(googleFuelGallons, hereFuelGallons);
+      normalizedHereFuel = normalize(hereFuelGallons, googleFuelGallons);
+    }
+
     const googleScore = calculateScore(
-      googleTimeMinutes,
-      googleDistanceMiles,
-      numberOfGoogleDirections,
-      googleFuelGallons,
+      normalizedGoogleTime,
+      normalizedGoogleDistance,
+      normalizedGoogleDirections,
+      normalizedGoogleFuel,
     );
     console.log("Google route score:", googleScore);
 
-    //TODO: use the normalized values for each factor as parameters for calling calculateScore
     const hereScore = calculateScore(
-      hereTimeMinutes,
-      hereDistanceMiles,
-      numberOfHereDirections,
-      hereFuelGallons,
+      normalizedHereTime,
+      normalizedHereDistance,
+      normalizedHereDirections,
+      normalizedHereFuel,
     );
     console.log("HERE route score:", hereScore);
 
