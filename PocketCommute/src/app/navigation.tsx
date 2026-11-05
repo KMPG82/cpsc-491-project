@@ -121,11 +121,20 @@ export default function navigation() {
   const [numberOfHereDirections, setNumberOfHereDirections] =
     useState<number>(0);
 
-  /*TODO:
-      1. complete the normalize function, more details above the function
-      2. use the normalize function to calculate the normalized values for each factor for both routes
-      3. substitute the current parameters used in calculateScore call with the normalized values
-  */
+  const [isGoogleRouteFaster, setIsGoogleRouteFaster] = useState<
+    boolean | null
+  >(null);
+  const [isGoogleRouteShorter, setIsGoogleRouteShorter] = useState<
+    boolean | null
+  >(null);
+  const [
+    doesGoogleRouteHaveLessDirections,
+    setDoesGoogleRouteHaveLessDirections,
+  ] = useState<boolean | null>(null);
+  const [doesGoogleRouteUseLessFuel, setIsGoogleRouteUseLessFuel] = useState<
+    boolean | null
+  >(null);
+
   function evaluateRoutes(
     googleRoute: GoogleRoute | null,
     setGoogleRouteChosen: (googleChosen: boolean) => void,
@@ -183,6 +192,40 @@ export default function navigation() {
     }
     const numberOfHereDirections = hereRoute.sections[0].actions.length;
     //console.log("Number of HERE route directions:", numberOfHereDirections);
+
+    if (googleTimeMinutes < hereTimeMinutes) {
+      setIsGoogleRouteFaster(true);
+    } else if (hereTimeMinutes < googleTimeMinutes) {
+      setIsGoogleRouteFaster(false);
+    } else {
+      setIsGoogleRouteFaster(null);
+    }
+
+    if (googleDistanceMiles < hereDistanceMiles) {
+      setIsGoogleRouteShorter(true);
+    } else if (hereDistanceMiles < googleDistanceMiles) {
+      setIsGoogleRouteShorter(false);
+    } else {
+      setIsGoogleRouteShorter(null);
+    }
+
+    if (numberOfGoogleDirections < numberOfHereDirections) {
+      setDoesGoogleRouteHaveLessDirections(true);
+    } else if (numberOfHereDirections < numberOfGoogleDirections) {
+      setDoesGoogleRouteHaveLessDirections(false);
+    } else {
+      setDoesGoogleRouteHaveLessDirections(null);
+    }
+
+    if (mode === "DRIVE") {
+      if (googleFuelGallons < hereFuelGallons) {
+        setIsGoogleRouteUseLessFuel(true);
+      } else if (hereFuelGallons < googleFuelGallons) {
+        setIsGoogleRouteUseLessFuel(false);
+      } else {
+        setIsGoogleRouteUseLessFuel(null);
+      }
+    }
 
     // Normalized values for Time in minutes
     const normalizedGoogleTime = normalize(googleTimeMinutes, hereTimeMinutes);
@@ -273,13 +316,6 @@ export default function navigation() {
     return score;
   };
 
-  /* TODO: 
-        normalizes metrics by returning the divison of largest value by the smallest value 
-        
-        example function calls would be: 
-        normalizedGoogleTime = normalize(googleTime, hereTime)
-        normalizedHereTime = normalize(hereTime, googleTime)
-  */
   const normalize = (value1: number, value2: number) => {
     const max = Math.max(value1, value2);
     if (max === 0) {
@@ -488,21 +524,35 @@ export default function navigation() {
           <>
             <Text variant="headlineMedium">Google Route Details</Text>
 
-            <Text variant="bodyLarge">Duration: {convertedGoogleTime} min</Text>
+            <Text variant="bodyLarge">
+              Duration: {convertedGoogleTime} min
+              {googleRouteChosen &&
+                isGoogleRouteFaster &&
+                `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
+            </Text>
 
             <Text variant="bodyLarge">
               Distance: {convertedGoogleDistance} mi
+              {googleRouteChosen &&
+                isGoogleRouteShorter &&
+                `, ${Math.abs(convertedGoogleDistance - convertedHereDistance).toFixed(2)} mi shorter`}
             </Text>
 
             {mode === "DRIVE" &&
               googleRoute.travelAdvisory?.fuelConsumptionMicroliters && (
                 <Text variant="bodyLarge">
                   Estimated Fuel: {convertedGoogleFuel} gal
+                  {googleRouteChosen &&
+                    doesGoogleRouteUseLessFuel &&
+                    `, ${Math.abs(convertedGoogleFuel - convertedHereFuel).toFixed(2)} gal less`}
                 </Text>
               )}
 
             <Text variant="bodyLarge">
               Number of Directions: {numberOfGoogleDirections}
+              {googleRouteChosen &&
+                doesGoogleRouteHaveLessDirections &&
+                `, ${Math.abs(numberOfGoogleDirections - numberOfHereDirections)} directions less`}
             </Text>
 
             <Text variant="headlineMedium">Directions</Text>
@@ -528,20 +578,34 @@ export default function navigation() {
           <>
             <Text variant="headlineMedium">HERE Route Details</Text>
 
-            <Text variant="bodyLarge">Duration: {convertedHereTime} min</Text>
+            <Text variant="bodyLarge">
+              Duration: {convertedHereTime} min
+              {hereRouteChosen &&
+                !isGoogleRouteFaster &&
+                `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
+            </Text>
 
             <Text variant="bodyLarge">
               Distance: {convertedHereDistance} mi
+              {hereRouteChosen &&
+                !isGoogleRouteShorter &&
+                `, ${Math.abs(convertedGoogleDistance - convertedHereDistance).toFixed(2)} mi shorter`}
             </Text>
 
             {mode === "DRIVE" && hereRoute.sections[0].summary.consumption && (
               <Text variant="bodyLarge">
                 Estimated Fuel: {convertedHereFuel} gal
+                {hereRouteChosen &&
+                  !doesGoogleRouteUseLessFuel &&
+                  `, ${Math.abs(convertedGoogleFuel - convertedHereFuel).toFixed(2)} gal less`}
               </Text>
             )}
 
             <Text variant="bodyLarge">
               Number of Directions: {numberOfHereDirections}
+              {hereRouteChosen &&
+                !doesGoogleRouteHaveLessDirections &&
+                `, ${Math.abs(numberOfGoogleDirections - numberOfHereDirections)} directions less`}
             </Text>
 
             <Text variant="headlineMedium">Directions</Text>
@@ -600,6 +664,8 @@ const styles = StyleSheet.create({
   changeRouteDetailsButtonContainer: {
     flexDirection: "row",
     justifyContent: "center",
+    borderBottomWidth: 1,
+    paddingBottom: 8,
   },
   centerText: {
     textAlign: "center",
