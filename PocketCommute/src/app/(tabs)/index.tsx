@@ -157,6 +157,22 @@ export default function App() {
             onPress={() => {
               if (!destination) {
                 console.log("No destination has been selected.");
+                Alert.alert(
+                  "ERROR",
+                  "Please select a desination before confirming.",
+                  [{ text: "OK" }],
+                );
+
+                return;
+              }
+
+              if (priority == "fuel" && mode != "DRIVE") {
+                console.log("Cannot choose fuel priority if not driving.");
+                Alert.alert(
+                  "ERROR",
+                  "Please select another priority or switch your mode of transportion to Drive.",
+                  [{ text: "OK" }],
+                );
                 return;
               }
 
