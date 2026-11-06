@@ -380,7 +380,6 @@ export default function App() {
 //styling
 const styles = StyleSheet.create({
   map: {
-    width: "100%",
     height: "100%",
   },
   safeArea: {
@@ -396,6 +395,9 @@ const styles = StyleSheet.create({
   searchBar: {
     flex: 1,
     marginRight: 5,
+    borderWidth: 1,
+    borderRadius: 30,
+    borderColor: "#504f4f5d",
   },
   preferencesModal: {
     height: "70%",
