@@ -126,7 +126,10 @@ export default function App() {
                 {suggestions.map((suggestion, index) => (
                   <Pressable
                     key={index}
-                    style={styles.suggestion}
+                    style={[
+                      styles.lastSuggestion,
+                      index !== suggestions.length - 1 && styles.suggestion,
+                    ]}
                     onPress={() => {
                       setDestination(suggestion);
 
@@ -379,7 +382,6 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   preferencesModal: {
-    backgroundColor: "white",
     height: "70%",
   },
   preferencesContainer: {
@@ -402,7 +404,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "column",
     borderWidth: 1,
+    borderColor: "#504f4f5d",
     alignItems: "center",
+    backgroundColor: "white",
   },
   preferencesTitle: {
     fontWeight: "bold",
@@ -416,14 +420,18 @@ const styles = StyleSheet.create({
   suggestionsContainer: {
     position: "absolute",
     top: 60,
-    backgroundColor: "white",
     elevation: 10,
     zIndex: 1,
+    backgroundColor: "white",
+    borderRadius: 15,
   },
   suggestion: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#999999",
+    borderBottomColor: "#504f4f5d",
+  },
+  lastSuggestion: {
+    padding: 12,
   },
   centerText: {
     textAlign: "center",

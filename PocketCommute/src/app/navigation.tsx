@@ -295,22 +295,22 @@ export default function navigation() {
     // given formulas
     if (mode == "DRIVE") {
       if (priority == "time") {
-        score = 0.7 * time + 0.1 * distance + 0.1 * directions + 0.1 * fuel;
+        score = 0.85 * time + 0.05 * distance + 0.05 * directions + 0.05 * fuel;
       } else if (priority == "distance") {
-        score = 0.1 * time + 0.7 * distance + 0.1 * directions + 0.1 * fuel;
+        score = 0.05 * time + 0.85 * distance + 0.05 * directions + 0.05 * fuel;
       } else if (priority == "directions") {
-        score = 0.1 * time + 0.1 * distance + 0.7 * directions + 0.1 * fuel;
+        score = 0.05 * time + 0.05 * distance + 0.85 * directions + 0.05 * fuel;
       } else if (priority == "fuel") {
-        score = 0.1 * time + 0.1 * distance + 0.1 * directions + 0.7 * fuel;
+        score = 0.05 * time + 0.05 * distance + 0.05 * directions + 0.85 * fuel;
       }
     } else {
       if (priority == "distance") {
-        score = 0.15 * time + 0.7 * distance + 0.15 * directions;
+        score = 0.1 * time + 0.8 * distance + 0.1 * directions;
       } else if (priority == "directions") {
-        score = 0.15 * time + 0.15 * distance + 0.7 * directions;
+        score = 0.1 * time + 0.1 * distance + 0.8 * directions;
       } else {
         //time, also used if fuel was left selected after switching from driving
-        score = 0.7 * time + 0.15 * distance + 0.15 * directions;
+        score = 0.8 * time + 0.1 * distance + 0.1 * directions;
       }
     }
     return score;
@@ -447,16 +447,8 @@ export default function navigation() {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
+        showsUserLocation={true}
       >
-        <Marker
-          coordinate={{
-            latitude: currentLocationLat,
-            longitude: currentLocationLong,
-          }}
-          title="Current Location"
-          pinColor="red"
-        />
-
         <Marker
           coordinate={{
             latitude: destinationLat,
@@ -499,10 +491,7 @@ export default function navigation() {
         )}
       </MapView>
 
-      <ScrollView
-        style={styles.bottomPanelContainer}
-        contentContainerStyle={styles.bottomPanelContent}
-      >
+      <ScrollView style={styles.bottomPanelContainer}>
         <View style={styles.changeRouteDetailsButtonContainer}>
           <Button
             mode="contained"
@@ -522,107 +511,120 @@ export default function navigation() {
         </View>
         {googleRoute && routeDetails === "google" && (
           <>
-            <Text variant="headlineMedium">Google Route Details</Text>
+            <View style={styles.detailsContainer}>
+              <Text variant="headlineMedium">Google Route Details</Text>
 
-            <Text variant="bodyLarge">
-              Duration: {convertedGoogleTime} min
-              {googleRouteChosen &&
-                isGoogleRouteFaster &&
-                `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
-            </Text>
+              <Text variant="bodyLarge">
+                <Text style={styles.bold}>Duration: </Text>
+                {convertedGoogleTime} min
+                {googleRouteChosen &&
+                  isGoogleRouteFaster &&
+                  `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
+              </Text>
 
-            <Text variant="bodyLarge">
-              Distance: {convertedGoogleDistance} mi
-              {googleRouteChosen &&
-                isGoogleRouteShorter &&
-                `, ${Math.abs(convertedGoogleDistance - convertedHereDistance).toFixed(2)} mi shorter`}
-            </Text>
+              <Text variant="bodyLarge">
+                <Text style={styles.bold}>Distance: </Text>
+                {convertedGoogleDistance} mi
+                {googleRouteChosen &&
+                  isGoogleRouteShorter &&
+                  `, ${Math.abs(convertedGoogleDistance - convertedHereDistance).toFixed(2)} mi shorter`}
+              </Text>
 
-            {mode === "DRIVE" &&
-              googleRoute.travelAdvisory?.fuelConsumptionMicroliters && (
-                <Text variant="bodyLarge">
-                  Estimated Fuel: {convertedGoogleFuel} gal
-                  {googleRouteChosen &&
-                    doesGoogleRouteUseLessFuel &&
-                    `, ${Math.abs(convertedGoogleFuel - convertedHereFuel).toFixed(2)} gal less`}
-                </Text>
-              )}
-
-            <Text variant="bodyLarge">
-              Number of Directions: {numberOfGoogleDirections}
-              {googleRouteChosen &&
-                doesGoogleRouteHaveLessDirections &&
-                `, ${Math.abs(numberOfGoogleDirections - numberOfHereDirections)} directions less`}
-            </Text>
-
-            <Text variant="headlineMedium">Directions</Text>
-
-            {googleRoute.legs[0].steps.map((step, index) => (
-              <View key={index} style={styles.direction}>
-                <View style={styles.directionContainer}>
-                  <Text variant="bodyLarge" style={styles.directionNumber}>
-                    {index + 1}.
-                  </Text>
-
+              {mode === "DRIVE" &&
+                googleRoute.travelAdvisory?.fuelConsumptionMicroliters && (
                   <Text variant="bodyLarge">
-                    {step.navigationInstruction.instructions}. Go for{" "}
-                    {convertToMiles(step.distanceMeters)} mi
+                    <Text style={styles.bold}>Estimated Fuel: </Text>
+                    {convertedGoogleFuel} gal
+                    {googleRouteChosen &&
+                      doesGoogleRouteUseLessFuel &&
+                      `, ${Math.abs(convertedGoogleFuel - convertedHereFuel).toFixed(2)} gal less`}
                   </Text>
+                )}
+
+              <Text variant="bodyLarge">
+                <Text style={styles.bold}>Number of Directions: </Text>
+                {numberOfGoogleDirections}
+                {googleRouteChosen &&
+                  doesGoogleRouteHaveLessDirections &&
+                  `, ${Math.abs(numberOfGoogleDirections - numberOfHereDirections)} directions less`}
+              </Text>
+
+              <Text variant="headlineMedium">Directions</Text>
+
+              {googleRoute.legs[0].steps.map((step, index) => (
+                <View key={index} style={styles.direction}>
+                  <View style={styles.directionContainer}>
+                    <Text variant="bodyLarge" style={styles.bold}>
+                      {index + 1}.
+                    </Text>
+
+                    <Text variant="bodyLarge">
+                      {step.navigationInstruction.instructions}. Go for{" "}
+                      {convertToMiles(step.distanceMeters)} mi
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              ))}
+            </View>
           </>
         )}
 
         {hereRoute && routeDetails === "here" && (
           <>
-            <Text variant="headlineMedium">HERE Route Details</Text>
+            <View style={styles.detailsContainer}>
+              <Text variant="headlineMedium">HERE Route Details</Text>
 
-            <Text variant="bodyLarge">
-              Duration: {convertedHereTime} min
-              {hereRouteChosen &&
-                !isGoogleRouteFaster &&
-                `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
-            </Text>
-
-            <Text variant="bodyLarge">
-              Distance: {convertedHereDistance} mi
-              {hereRouteChosen &&
-                !isGoogleRouteShorter &&
-                `, ${Math.abs(convertedGoogleDistance - convertedHereDistance).toFixed(2)} mi shorter`}
-            </Text>
-
-            {mode === "DRIVE" && hereRoute.sections[0].summary.consumption && (
               <Text variant="bodyLarge">
-                Estimated Fuel: {convertedHereFuel} gal
+                <Text style={styles.bold}>Duration: </Text>
+                {convertedHereTime} min
                 {hereRouteChosen &&
-                  !doesGoogleRouteUseLessFuel &&
-                  `, ${Math.abs(convertedGoogleFuel - convertedHereFuel).toFixed(2)} gal less`}
+                  !isGoogleRouteFaster &&
+                  `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
               </Text>
-            )}
 
-            <Text variant="bodyLarge">
-              Number of Directions: {numberOfHereDirections}
-              {hereRouteChosen &&
-                !doesGoogleRouteHaveLessDirections &&
-                `, ${Math.abs(numberOfGoogleDirections - numberOfHereDirections)} directions less`}
-            </Text>
+              <Text variant="bodyLarge">
+                <Text style={styles.bold}>Distance: </Text>
+                {convertedHereDistance} mi
+                {hereRouteChosen &&
+                  !isGoogleRouteShorter &&
+                  `, ${Math.abs(convertedGoogleDistance - convertedHereDistance).toFixed(2)} mi shorter`}
+              </Text>
 
-            <Text variant="headlineMedium">Directions</Text>
-
-            {hereRoute.sections[0].actions.map((action, index) => (
-              <View key={index} style={styles.direction}>
-                <View style={styles.directionContainer}>
-                  <Text variant="bodyLarge" style={styles.directionNumber}>
-                    {index + 1}.
-                  </Text>
-
+              {mode === "DRIVE" &&
+                hereRoute.sections[0].summary.consumption && (
                   <Text variant="bodyLarge">
-                    {modifyHereInstruction(action.instruction)}
+                    <Text style={styles.bold}>Estimated Fuel: </Text>
+                    {convertedHereFuel} gal
+                    {hereRouteChosen &&
+                      !doesGoogleRouteUseLessFuel &&
+                      `, ${Math.abs(convertedGoogleFuel - convertedHereFuel).toFixed(2)} gal less`}
                   </Text>
+                )}
+
+              <Text variant="bodyLarge">
+                <Text style={styles.bold}>Number of Directions: </Text>
+                {numberOfHereDirections}
+                {hereRouteChosen &&
+                  !doesGoogleRouteHaveLessDirections &&
+                  `, ${Math.abs(numberOfGoogleDirections - numberOfHereDirections)} directions less`}
+              </Text>
+
+              <Text variant="headlineMedium">Directions</Text>
+
+              {hereRoute.sections[0].actions.map((action, index) => (
+                <View key={index} style={styles.direction}>
+                  <View style={styles.directionContainer}>
+                    <Text variant="bodyLarge" style={styles.bold}>
+                      {index + 1}.
+                    </Text>
+
+                    <Text variant="bodyLarge">
+                      {modifyHereInstruction(action.instruction)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              ))}
+            </View>
           </>
         )}
       </ScrollView>
@@ -644,18 +646,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   bottomPanelContainer: {
-    flex: 2,
-    backgroundColor: "#ffffff",
-  },
-  bottomPanelContent: {
-    padding: 10,
+    flex: 1,
   },
   directionContainer: {
     flex: 1,
     flexDirection: "row",
     paddingRight: 10,
   },
-  directionNumber: {
+  bold: {
     fontWeight: "bold",
   },
   direction: {
@@ -664,10 +662,16 @@ const styles = StyleSheet.create({
   changeRouteDetailsButtonContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    borderBottomWidth: 1,
-    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderColor: "#504f4f5d",
+    paddingTop: 5,
   },
   centerText: {
     textAlign: "center",
+  },
+  detailsContainer: {
+    flex: 1,
+    paddingLeft: 5,
+    paddingRight: 5,
   },
 });
