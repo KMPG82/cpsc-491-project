@@ -198,7 +198,7 @@ export default function navigation() {
     } else if (hereTimeMinutes < googleTimeMinutes) {
       setIsGoogleRouteFaster(false);
     } else {
-      setIsGoogleRouteFaster(null);
+      setIsGoogleRouteFaster(false);
     }
 
     if (googleDistanceMiles < hereDistanceMiles) {
@@ -206,7 +206,7 @@ export default function navigation() {
     } else if (hereDistanceMiles < googleDistanceMiles) {
       setIsGoogleRouteShorter(false);
     } else {
-      setIsGoogleRouteShorter(null);
+      setIsGoogleRouteShorter(false);
     }
 
     if (numberOfGoogleDirections < numberOfHereDirections) {
@@ -214,7 +214,7 @@ export default function navigation() {
     } else if (numberOfHereDirections < numberOfGoogleDirections) {
       setDoesGoogleRouteHaveLessDirections(false);
     } else {
-      setDoesGoogleRouteHaveLessDirections(null);
+      setDoesGoogleRouteHaveLessDirections(false);
     }
 
     if (mode === "DRIVE") {
@@ -223,7 +223,7 @@ export default function navigation() {
       } else if (hereFuelGallons < googleFuelGallons) {
         setIsGoogleRouteUseLessFuel(false);
       } else {
-        setIsGoogleRouteUseLessFuel(null);
+        setIsGoogleRouteUseLessFuel(false);
       }
     }
 
@@ -559,8 +559,8 @@ export default function navigation() {
                     </Text>
 
                     <Text variant="bodyLarge">
-                      {step.navigationInstruction.instructions}. Go for{" "}
-                      {convertToMiles(step.distanceMeters)} mi
+                      {step.navigationInstruction.instructions}.
+                      {/* Go for {convertToMiles(step.distanceMeters)} mi */}
                     </Text>
                   </View>
                 </View>

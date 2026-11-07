@@ -6,9 +6,9 @@ export const modifyHereInstruction = (instruction: string | undefined) => {
     return instruction;
   } else {
     return instruction.replace(
-      /Go for ([\d.]+) m/,
-      (matchedSegment, distanceInMeters) =>
-        `Go for ${convertToMiles(Number(distanceInMeters))} mi`,
+      /Go for ([\d.]+) (m|km)./,
+      (matchedSegment, distanceInMeters) => ``,
+      // `Go for ${convertToMiles(Number(distanceInMeters))} mi`,
     );
   }
 };

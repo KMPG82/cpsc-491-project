@@ -123,30 +123,32 @@ export default function App() {
 
             {suggestions.length > 0 && (
               <View style={styles.suggestionsContainer}>
-                {suggestions.map((suggestion, index) => (
-                  <Pressable
-                    key={index}
-                    style={[
-                      styles.lastSuggestion,
-                      index !== suggestions.length - 1 && styles.suggestion,
-                    ]}
-                    onPress={() => {
-                      setDestination(suggestion);
+                {suggestions
+                  .filter((suggestion) => suggestion.properties.name?.trim())
+                  .map((suggestion, index) => (
+                    <Pressable
+                      key={index}
+                      style={[
+                        styles.lastSuggestion,
+                        index !== suggestions.length - 1 && styles.suggestion,
+                      ]}
+                      onPress={() => {
+                        setDestination(suggestion);
 
-                      setSearch(suggestion.properties.name || "");
+                        setSearch(suggestion.properties.name || "");
 
-                      setSuggestions([]);
-                    }}
-                  >
-                    <Text variant="bodyLarge">
-                      {suggestion.properties.name}
-                    </Text>
+                        setSuggestions([]);
+                      }}
+                    >
+                      <Text variant="bodyLarge">
+                        {suggestion.properties.name}
+                      </Text>
 
-                    <Text variant="bodySmall">
-                      {suggestion.properties.address_line2}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text variant="bodySmall">
+                        {suggestion.properties.address_line2}
+                      </Text>
+                    </Pressable>
+                  ))}
               </View>
             )}
           </View>

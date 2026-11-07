@@ -1,7 +1,7 @@
 //convert a distance in meters to miles
 export const convertToMiles = (distanceInMeters: number): number => {
   //1 mile = 1609.344 meters
-  let distanceInMiles = Number((distanceInMeters / 1609.344).toFixed(1));
+  let distanceInMiles = Number((distanceInMeters / 1609.344).toFixed(2));
   return distanceInMiles;
 };
 
