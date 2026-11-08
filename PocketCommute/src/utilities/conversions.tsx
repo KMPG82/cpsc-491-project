@@ -2,6 +2,9 @@
 export const convertToMiles = (distanceInMeters: number): number => {
   //1 mile = 1609.344 meters
   let distanceInMiles = Number((distanceInMeters / 1609.344).toFixed(2));
+  // console.log("meters: ", distanceInMeters);
+  // console.log("miles: ", distanceInMiles);
+
   return distanceInMiles;
 };
 
@@ -9,6 +12,8 @@ export const convertToMiles = (distanceInMeters: number): number => {
 export const convertToMinutes = (timeInSeconds: number): number => {
   //1 minute = 60 seconds
   let timeInMinutes = Math.round(timeInSeconds / 60);
+  // console.log("seconds: ", timeInSeconds);
+  // console.log("minutes: ", timeInMinutes);
   return timeInMinutes;
 };
 

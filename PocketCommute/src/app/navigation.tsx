@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
@@ -85,13 +85,14 @@ export default function navigation() {
     destinationName: string;
   };
 
+  const requestStartTime = useRef<number>(0);
+  const evaluationTimeLogged = useRef<boolean>(false);
+
   //convert to original data types
   const shouldAvoidHighways: boolean = avoidHighways === "true";
   const shouldAvoidTolls: boolean = avoidTolls === "true";
-
   const currentLocationLat: number = parseFloat(currentLocationLatitude);
   const currentLocationLong: number = parseFloat(currentLocationLongitude);
-
   const destinationLat: number = parseFloat(destinationLatitude);
   const destinationLong: number = parseFloat(destinationLongitude);
 
@@ -135,14 +136,26 @@ export default function navigation() {
     boolean | null
   >(null);
 
+  const [isHereRouteFaster, setIsHereRouteFaster] = useState<boolean | null>(
+    null,
+  );
+  const [isHereRouteShorter, setIsHereRouteShorter] = useState<boolean | null>(
+    null,
+  );
+  const [doesHereRouteHaveLessDirections, setDoesHereRouteHaveLessDirections] =
+    useState<boolean | null>(null);
+  const [doesHereRouteUseLessFuel, setIsHereRouteUseLessFuel] = useState<
+    boolean | null
+  >(null);
+
   function evaluateRoutes(
     googleRoute: GoogleRoute | null,
     setGoogleRouteChosen: (googleChosen: boolean) => void,
     hereRoute: HereRoute | null,
     setHereRouteChosen: (hereChosen: boolean) => void,
   ) {
-    console.log("Priority:", priority);
-    console.log("Mode:", mode);
+    // console.log("Priority:", priority);
+    // console.log("Mode:", mode);
 
     //if one of the routes could not be retrieved, choose the other one
     if (!googleRoute || !hereRoute) {
@@ -161,69 +174,85 @@ export default function navigation() {
     const googleTimeMinutes = convertToMinutes(
       parseFloat(googleRoute.duration),
     );
-    //console.log("Google route time:", googleTimeMinutes);
+    console.log("Google route time:", googleTimeMinutes);
+
     const googleDistanceMiles = convertToMiles(googleRoute.distanceMeters);
-    //console.log("Google route distance:", googleDistanceMiles);
+    console.log("Google route distance:", googleDistanceMiles);
+
     let googleFuelGallons = 0;
     if (mode == "DRIVE") {
       googleFuelGallons = calculateFuelConsumptionEstimate(
         googleRoute.distanceMeters,
       );
-      //console.log("Google route fuel consumption:", googleFuelGallons);
+      console.log("Google route fuel consumption:", googleFuelGallons);
     }
     const numberOfGoogleDirections = googleRoute.legs[0].steps.length;
-    //console.log("Number of Google route directions:", numberOfGoogleDirections);
+    console.log("Number of Google route directions:", numberOfGoogleDirections);
 
     //here's route data
     const hereTimeMinutes = convertToMinutes(
       hereRoute.sections[0].summary.duration,
     );
-    //console.log("HERE route time:", hereTimeMinutes);
+
+    console.log("HERE route time:", hereTimeMinutes);
     const hereDistanceMiles = convertToMiles(
       hereRoute.sections[0].summary.length,
     );
-    //console.log("HERE route distance:", hereDistanceMiles);
+
+    console.log("HERE route distance:", hereDistanceMiles);
     let hereFuelGallons = 0;
     if (mode == "DRIVE") {
       hereFuelGallons = calculateFuelConsumptionEstimate(
         hereRoute.sections[0].summary.length,
       );
-      //console.log("HERE route fuel consumption:", hereFuelGallons);
+      console.log("HERE route fuel consumption:", hereFuelGallons);
     }
     const numberOfHereDirections = hereRoute.sections[0].actions.length;
-    //console.log("Number of HERE route directions:", numberOfHereDirections);
+    console.log("Number of HERE route directions:", numberOfHereDirections);
 
     if (googleTimeMinutes < hereTimeMinutes) {
       setIsGoogleRouteFaster(true);
+      setIsHereRouteFaster(false);
     } else if (hereTimeMinutes < googleTimeMinutes) {
       setIsGoogleRouteFaster(false);
+      setIsHereRouteFaster(true);
     } else {
       setIsGoogleRouteFaster(false);
+      setIsHereRouteFaster(false);
     }
 
     if (googleDistanceMiles < hereDistanceMiles) {
       setIsGoogleRouteShorter(true);
+      setIsHereRouteShorter(false);
     } else if (hereDistanceMiles < googleDistanceMiles) {
       setIsGoogleRouteShorter(false);
+      setIsHereRouteShorter(true);
     } else {
       setIsGoogleRouteShorter(false);
+      setIsHereRouteShorter(false);
     }
 
     if (numberOfGoogleDirections < numberOfHereDirections) {
       setDoesGoogleRouteHaveLessDirections(true);
+      setDoesHereRouteHaveLessDirections(false);
     } else if (numberOfHereDirections < numberOfGoogleDirections) {
       setDoesGoogleRouteHaveLessDirections(false);
+      setDoesHereRouteHaveLessDirections(true);
     } else {
       setDoesGoogleRouteHaveLessDirections(false);
+      setDoesHereRouteHaveLessDirections(false);
     }
 
     if (mode === "DRIVE") {
       if (googleFuelGallons < hereFuelGallons) {
         setIsGoogleRouteUseLessFuel(true);
+        setIsHereRouteUseLessFuel(false);
       } else if (hereFuelGallons < googleFuelGallons) {
         setIsGoogleRouteUseLessFuel(false);
+        setIsHereRouteUseLessFuel(true);
       } else {
         setIsGoogleRouteUseLessFuel(false);
+        setIsHereRouteUseLessFuel(false);
       }
     }
 
@@ -258,6 +287,10 @@ export default function navigation() {
       normalizedHereFuel = normalize(hereFuelGallons, googleFuelGallons);
     }
 
+    // console.log("Google normalized time: ", normalizedGoogleTime);
+    // console.log("Google normalized distance: ", normalizedGoogleDistance);
+    // console.log("Google normalized fuel: ", normalizedGoogleFuel);
+    // console.log("Google normalized directions: ", normalizedGoogleDirections);
     const googleScore = calculateScore(
       normalizedGoogleTime,
       normalizedGoogleDistance,
@@ -266,6 +299,10 @@ export default function navigation() {
     );
     console.log("Google route score:", googleScore);
 
+    // console.log("HERE normalized time: ", normalizedHereTime);
+    // console.log("HERE normalized distance: ", normalizedHereDistance);
+    // console.log("HERE normalized fuel: ", normalizedHereFuel);
+    // console.log("HERE normalized directions: ", normalizedHereDirections);
     const hereScore = calculateScore(
       normalizedHereTime,
       normalizedHereDistance,
@@ -292,7 +329,6 @@ export default function navigation() {
     fuel: number,
   ): number => {
     let score = 0;
-    // given formulas
     if (mode == "DRIVE") {
       if (priority == "time") {
         score = 0.85 * time + 0.05 * distance + 0.05 * directions + 0.05 * fuel;
@@ -313,11 +349,17 @@ export default function navigation() {
         score = 0.8 * time + 0.1 * distance + 0.1 * directions;
       }
     }
+
+    // console.log("score: ", score);
     return score;
   };
 
   const normalize = (value1: number, value2: number) => {
     const max = Math.max(value1, value2);
+    // console.log("value1: ", value1);
+    // console.log("value2: ", value2);
+    // console.log("value1 / max: ", value1 / max);
+
     if (max === 0) {
       return 0; // prevents division by zero
     }
@@ -339,6 +381,9 @@ export default function navigation() {
   }
 
   useEffect(() => {
+    requestStartTime.current = performance.now();
+    evaluationTimeLogged.current = false;
+
     getGoogleRoute(
       currentLocationLat,
       currentLocationLong,
@@ -406,8 +451,15 @@ export default function navigation() {
         hereRoute,
         setHereRouteChosen,
       );
+
+      const endTime = performance.now();
+      let totalEvaluationTime = 0;
+      if (requestStartTime.current) {
+        totalEvaluationTime = endTime - requestStartTime.current;
+      }
+      // console.log("Evaluation time: ", totalEvaluationTime.toFixed(2));
     }
-  }, [googleRoute, hereRoute]);
+  }, [googleRoute, hereRoute, retrievingGoogleRoute, retrievingHereRoute]);
 
   useEffect(() => {
     if (errorMessage) {
@@ -578,7 +630,7 @@ export default function navigation() {
                 <Text style={styles.bold}>Duration: </Text>
                 {convertedHereTime} min
                 {hereRouteChosen &&
-                  !isGoogleRouteFaster &&
+                  isHereRouteFaster &&
                   `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
               </Text>
 
@@ -586,7 +638,7 @@ export default function navigation() {
                 <Text style={styles.bold}>Distance: </Text>
                 {convertedHereDistance} mi
                 {hereRouteChosen &&
-                  !isGoogleRouteShorter &&
+                  isHereRouteShorter &&
                   `, ${Math.abs(convertedGoogleDistance - convertedHereDistance).toFixed(2)} mi shorter`}
               </Text>
 
@@ -596,7 +648,7 @@ export default function navigation() {
                     <Text style={styles.bold}>Estimated Fuel: </Text>
                     {convertedHereFuel} gal
                     {hereRouteChosen &&
-                      !doesGoogleRouteUseLessFuel &&
+                      doesHereRouteUseLessFuel &&
                       `, ${Math.abs(convertedGoogleFuel - convertedHereFuel).toFixed(2)} gal less`}
                   </Text>
                 )}
@@ -605,7 +657,7 @@ export default function navigation() {
                 <Text style={styles.bold}>Number of Directions: </Text>
                 {numberOfHereDirections}
                 {hereRouteChosen &&
-                  !doesGoogleRouteHaveLessDirections &&
+                  doesHereRouteHaveLessDirections &&
                   `, ${Math.abs(numberOfGoogleDirections - numberOfHereDirections)} directions less`}
               </Text>
 
