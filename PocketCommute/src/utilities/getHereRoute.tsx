@@ -73,7 +73,7 @@ export async function getHereRoute(
   }
 
   try {
-    const startTime = performance.now();
+    // const startTime = performance.now();
 
     const response = await fetch(
       `https://router.hereapi.com/v8/routes?${params.toString()}`,
@@ -85,11 +85,11 @@ export async function getHereRoute(
 
     const hereRouteData = await response.json();
 
-    const endTime = performance.now();
-    const responseTime = endTime - startTime;
+    // const endTime = performance.now();
+    // const responseTime = endTime - startTime;
     // console.log("HERE API response time: ", responseTime.toFixed(2));
 
-    //console.log("route data: ", hereRouteData.routes);
+    // console.log("HERE route data: ", hereRouteData.routes);
     retrievedRoute = hereRouteData.routes;
 
     setHereRoute(retrievedRoute[0]);

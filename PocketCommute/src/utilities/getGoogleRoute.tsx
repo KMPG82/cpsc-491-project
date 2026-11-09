@@ -38,7 +38,7 @@ export async function getGoogleRoute(
   try {
     let retrievedRoute: GoogleRoute[] = [];
 
-    const startTime = performance.now();
+    // const startTime = performance.now();
 
     if (mode == "DRIVE") {
       const response = await fetch(
@@ -129,12 +129,13 @@ export async function getGoogleRoute(
 
       const googleRouteData = await response.json();
 
-      //console.log("google route data: ", googleRouteData.routes);
+      // console.log("google route data: ", googleRouteData.routes.legs[0]);
       retrievedRoute = googleRouteData.routes;
+      // console.log("google route data: ", retrievedRoute[0].legs[0]);
     }
 
-    const endTime = performance.now();
-    const responseTime = endTime - startTime;
+    // const endTime = performance.now();
+    // const responseTime = endTime - startTime;
     // console.log("Google API response time: ", responseTime.toFixed(2));
 
     setGoogleRoute(retrievedRoute[0]);

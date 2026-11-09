@@ -381,8 +381,8 @@ export default function navigation() {
   }
 
   useEffect(() => {
-    requestStartTime.current = performance.now();
-    evaluationTimeLogged.current = false;
+    // requestStartTime.current = performance.now();
+    // evaluationTimeLogged.current = false;
 
     getGoogleRoute(
       currentLocationLat,
@@ -452,11 +452,11 @@ export default function navigation() {
         setHereRouteChosen,
       );
 
-      const endTime = performance.now();
-      let totalEvaluationTime = 0;
-      if (requestStartTime.current) {
-        totalEvaluationTime = endTime - requestStartTime.current;
-      }
+      // const endTime = performance.now();
+      // let totalEvaluationTime = 0;
+      // if (requestStartTime.current) {
+      //   totalEvaluationTime = endTime - requestStartTime.current;
+      // }
       // console.log("Evaluation time: ", totalEvaluationTime.toFixed(2));
     }
   }, [googleRoute, hereRoute, retrievingGoogleRoute, retrievingHereRoute]);
@@ -611,7 +611,7 @@ export default function navigation() {
                     </Text>
 
                     <Text variant="bodyLarge">
-                      {step.navigationInstruction.instructions}.
+                      {step.navigationInstruction?.instructions}.
                       {/* Go for {convertToMiles(step.distanceMeters)} mi */}
                     </Text>
                   </View>
