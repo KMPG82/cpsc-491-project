@@ -235,6 +235,10 @@ export default function App() {
                     onValueChange={(newValue) => {
                       setMode(newValue);
                       setIsDriving(newValue == "DRIVE");
+
+                      if (newValue != "DRIVE" && priority == "fuel") {
+                        setPriority("time");
+                      }
                     }}
                     value={mode}
                   >
