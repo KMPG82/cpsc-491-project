@@ -1,126 +1,124 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Button,
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
-  Text, TextInput,
-  View
+  Text,
+  View,
 } from 'react-native';
 
+import AddressAutocomplete from '@/components/AddressAutocomplete';
+import { useAddressAutocomplete, type AddressAutocompleteState } from '@/hooks/useAddressAutocomplete';
 import type { Location } from '@/types/location';
-import { geocodeDestination } from '@/utilities/location';
 import { lyftUrls, openRideApp, uberUrls } from '@/utilities/rideshare';
 
+type RideLocations = { pickup: Location; destination: Location };
+
 export default function HomeScreen() {
-  const [input, setInput] = useState<string>('');
-  const [destination, setDestination] = useState<Location | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const pickup = useAddressAutocomplete();
+  const destination = useAddressAutocomplete();
+  const [confirmed, setConfirmed] = useState<RideLocations | null>(null);
+  const confirmedRef = useRef<RideLocations | null>(null);
+  const handoffInProgress = useRef(false);
+  const [openingProvider, setOpeningProvider] = useState(false);
 
-  const lookupVersion = useRef(0);
-  const activeLookup = useRef<number | null>(null);
-
-  useEffect(() => () => { lookupVersion.current += 1; }, []);
-
-  const handleConfirm = async () => {
-    if (activeLookup.current !== null) return;
-    const address = input.trim();
-    if (!address) {
-      Alert.alert('Enter an address first');
-      return;
-    }
-    Keyboard.dismiss();
-    const version = ++lookupVersion.current;
-    activeLookup.current = version;
-    setDestination(null);
-    setLoading(true);
-    try {
-      const result = await geocodeDestination(address);
-      if (version !== lookupVersion.current) return;
-      if (!result) {
-        setDestination(null);
-        Alert.alert('Address not found', 'Try adding the city and state.');
-        return;
-      }
-      setDestination(result);
-    } catch (e) {
-      if (version !== lookupVersion.current) return;
-      const message = e instanceof Error ? e.message : String(e);
-      Alert.alert('Could not look up that address', message);
-    } finally {
-      if (activeLookup.current === version) activeLookup.current = null;
-      if (version === lookupVersion.current) setLoading(false);
-    }
+  const invalidateConfirmation = () => {
+    confirmedRef.current = null;
+    setConfirmed(null);
   };
 
-  const handleChange = (text: string) => {
-    lookupVersion.current += 1;
-    activeLookup.current = null;
-    setLoading(false);
-    setInput(text);
-    setDestination(null); // editing invalidates the confirmed address
+  // Delegate searching and selection to the hook; edits also invalidate the pair
+  // synchronously so a queued provider press cannot use an old confirmation.
+  const fieldState = (field: AddressAutocompleteState): AddressAutocompleteState => ({
+    ...field,
+    onChangeText: (text) => {
+      invalidateConfirmation();
+      field.onChangeText(text);
+    },
+    selectSuggestion: (location) => {
+      invalidateConfirmation();
+      field.selectSuggestion(location);
+    },
+  });
+
+  const handleConfirm = () => {
+    if (handoffInProgress.current || confirmedRef.current) return;
+    if (!pickup.selectedLocation || !destination.selectedLocation) {
+      Alert.alert('Select both locations', 'Choose a suggestion for pickup and destination before confirming.');
+      return;
+    }
+    const pair = { pickup: pickup.selectedLocation, destination: destination.selectedLocation };
+    confirmedRef.current = pair;
+    setConfirmed(pair);
+    Keyboard.dismiss();
   };
 
   const handleOpenRide = async (provider: 'Uber' | 'Lyft') => {
-    if (!destination) return;
-
+    const pair = confirmedRef.current;
+    if (!pair || handoffInProgress.current) return;
+    handoffInProgress.current = true;
+    setOpeningProvider(true);
     try {
-      const urls = provider === 'Uber' ? uberUrls(destination) : lyftUrls(destination);
+      const urls = provider === 'Uber'
+        ? uberUrls(pair.pickup, pair.destination)
+        : lyftUrls(pair.pickup, pair.destination);
       await openRideApp(urls);
     } catch {
-      Alert.alert(
-        `Could not open ${provider}`,
-        'Could not open the app or its website. Please try again.'
-      );
+      Alert.alert(`Could not open ${provider}`, 'Could not open the app or its website. Please try again.');
+    } finally {
+      handoffInProgress.current = false;
+      setOpeningProvider(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Destination</Text>
-      <TextInput
-        style={styles.input}
-        value={input}
-        onChangeText={handleChange}
-        placeholder="e.g. 800 N State College Blvd, Fullerton, CA"
-        autoCapitalize="words"
-        returnKeyType="done"
-        onSubmitEditing={handleConfirm}
-      />
+    <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets={false}
+      >
+        <AddressAutocomplete label="Pickup" placeholder="Enter a pickup address" autocomplete={fieldState(pickup)} />
+        <AddressAutocomplete label="Destination" placeholder="Enter a destination address" autocomplete={fieldState(destination)} />
 
-      <View style={styles.btn}>
-        {loading ? (
-          <ActivityIndicator />
-        ) : (
-          <Button title="Confirm" onPress={handleConfirm} />
+        {pickup.selectedLocation && <Text style={styles.selected}>Pickup: {pickup.selectedLocation.formattedAddress}</Text>}
+        {destination.selectedLocation && <Text style={styles.selected}>Destination: {destination.selectedLocation.formattedAddress}</Text>}
+        <View style={styles.btn}>
+          <Button
+            title="Confirm locations"
+            disabled={!pickup.selectedLocation || !destination.selectedLocation || !!confirmed || openingProvider}
+            onPress={handleConfirm}
+          />
+        </View>
+        {confirmed && (
+          <>
+            <Text style={styles.confirmed}>
+              Confirmed pickup: {confirmed.pickup.formattedAddress}{'\n'}
+              Confirmed destination: {confirmed.destination.formattedAddress}{'\n'}
+              Check both pins in Uber or Lyft before requesting a ride.
+            </Text>
+            <View style={styles.btn}>
+              <Button title="Open Uber" disabled={openingProvider} onPress={() => handleOpenRide('Uber')} />
+            </View>
+            <View style={styles.btn}>
+              <Button title="Open Lyft" disabled={openingProvider} onPress={() => handleOpenRide('Lyft')} />
+            </View>
+          </>
         )}
-      </View>
-
-      {destination && (
-        <>
-          <Text style={styles.confirmed}>Resolved near: {destination.formattedAddress}{'\n'}
-            Coordinates: {destination.latitude}, {destination.longitude}{'\n'}
-            Check the destination pin in Uber or Lyft before requesting a ride.</Text>
-          <View style={styles.btn}>
-            <Button title="Open Uber" onPress={() => handleOpenRide('Uber')} />
-          </View>
-          <View style={styles.btn}>
-            <Button title="Open Lyft" onPress={() => handleOpenRide('Lyft')} />
-          </View>
-        </>
-      )}
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24 },
-  label: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
-  input: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    padding: 12, fontSize: 16,
-  },
+  keyboard: { flex: 1 },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingBottom: 40 },
   btn: { marginVertical: 8 },
+  selected: { color: '#444', marginVertical: 4 },
   confirmed: { marginTop: 16, marginBottom: 8, textAlign: 'center', color: '#444' },
 });

@@ -9,12 +9,15 @@ type RideUrls = {
 
 const enc = encodeURIComponent;
 
-export function uberUrls({ formattedAddress, latitude, longitude }: Location): RideUrls {
+export function uberUrls(pickup: Location, destination: Location): RideUrls {
   const query =
-    'action=setPickup&pickup=my_location' +
-    `&dropoff[latitude]=${latitude}&dropoff[longitude]=${longitude}` +
-    `&dropoff[nickname]=${enc(formattedAddress)}` +
-    `&dropoff[formatted_address]=${enc(formattedAddress)}`;
+    'action=setPickup' +
+    `&pickup[latitude]=${pickup.latitude}&pickup[longitude]=${pickup.longitude}` +
+    `&pickup[nickname]=${enc(pickup.formattedAddress)}` +
+    `&pickup[formatted_address]=${enc(pickup.formattedAddress)}` +
+    `&dropoff[latitude]=${destination.latitude}&dropoff[longitude]=${destination.longitude}` +
+    `&dropoff[nickname]=${enc(destination.formattedAddress)}` +
+    `&dropoff[formatted_address]=${enc(destination.formattedAddress)}`;
 
   return {
     app: `uber://riderequest?${query}`,
@@ -22,10 +25,11 @@ export function uberUrls({ formattedAddress, latitude, longitude }: Location): R
   };
 }
 
-export function lyftUrls({ latitude, longitude }: Location): RideUrls {
+export function lyftUrls(pickup: Location, destination: Location): RideUrls {
   const query =
-    `id=lyft&destination[latitude]=${latitude}` +
-    `&destination[longitude]=${longitude}`;
+    `id=lyft&pickup[latitude]=${pickup.latitude}&pickup[longitude]=${pickup.longitude}` +
+    `&destination[latitude]=${destination.latitude}` +
+    `&destination[longitude]=${destination.longitude}`;
 
   return {
     app: `lyft://ridetype?${query}`,
