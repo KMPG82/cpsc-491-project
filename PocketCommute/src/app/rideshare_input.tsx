@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import * as ExpoLocation from 'expo-location';
 import {
   Alert,
-  Button,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -120,25 +119,33 @@ export default function HomeScreen() {
         keyboardDismissMode="on-drag"
         automaticallyAdjustKeyboardInsets={false}
       >
+        <View style={styles.header}>
+          <Text style={styles.title}>Plan your ride</Text>
+          <Text style={styles.subtitle}>Choose a suggestion for each location, then confirm your trip.</Text>
+        </View>
         <AddressAutocomplete label="Pickup" placeholder="Enter a pickup address" autocomplete={fieldState(pickup)} />
         <AddressAutocomplete label="Destination" placeholder="Enter a destination address" autocomplete={fieldState(destination)} />
 
-        {pickup.selectedLocation && <Text style={styles.selected}>Pickup: {pickup.selectedLocation.formattedAddress}</Text>}
-        {destination.selectedLocation && <Text style={styles.selected}>Destination: {destination.selectedLocation.formattedAddress}</Text>}
-        <View style={styles.btn}>
-          <Button
-            title="Confirm locations"
-            disabled={!pickup.selectedLocation || !destination.selectedLocation || !!confirmed || openingProvider}
-            onPress={handleConfirm}
-          />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !pickup.selectedLocation || !destination.selectedLocation || !!confirmed || openingProvider }}
+          disabled={!pickup.selectedLocation || !destination.selectedLocation || !!confirmed || openingProvider}
+          onPress={handleConfirm}
+          style={({ pressed }) => [styles.action, styles.confirmAction,
+            (!pickup.selectedLocation || !destination.selectedLocation || !!confirmed || openingProvider) && styles.disabledAction,
+            pressed && styles.pressedAction]}
+        >
+          <Text style={[styles.actionLabel,
+            (!pickup.selectedLocation || !destination.selectedLocation || !!confirmed || openingProvider) && styles.disabledLabel]}>
+            {confirmed ? 'Locations confirmed' : 'Confirm locations'}
+          </Text>
+        </Pressable>
         {confirmed && (
           <>
-            <Text style={styles.confirmed}>
-              Confirmed pickup: {confirmed.pickup.formattedAddress}{'\n'}
-              Confirmed destination: {confirmed.destination.formattedAddress}{'\n'}
-              Check both pins in Uber or Lyft before requesting a ride.
-            </Text>
+            <View style={styles.confirmed}>
+              <Text style={styles.confirmedTitle}>Ready to open your ride app</Text>
+              <Text style={styles.subtitle}>Your selected addresses are shown above. Check both pins in the ride app before requesting a ride.</Text>
+            </View>
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded: showDetails }}
@@ -159,11 +166,27 @@ export default function HomeScreen() {
                 </Text>
               </View>
             )}
-            <View style={styles.btn}>
-              <Button title="Open Uber" disabled={openingProvider} onPress={() => handleOpenRide('Uber')} />
-            </View>
-            <View style={styles.btn}>
-              <Button title="Open Lyft" disabled={openingProvider} onPress={() => handleOpenRide('Lyft')} />
+            <View style={styles.providers}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open Uber with confirmed locations"
+                accessibilityState={{ disabled: openingProvider }}
+                disabled={openingProvider}
+                onPress={() => handleOpenRide('Uber')}
+                style={({ pressed }) => [styles.action, styles.uberAction, openingProvider && styles.disabledAction, pressed && styles.pressedAction]}
+              >
+                <Text style={[styles.actionLabel, openingProvider && styles.disabledLabel]}>Open Uber</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open Lyft with confirmed locations"
+                accessibilityState={{ disabled: openingProvider }}
+                disabled={openingProvider}
+                onPress={() => handleOpenRide('Lyft')}
+                style={({ pressed }) => [styles.action, styles.lyftAction, openingProvider && styles.disabledAction, pressed && styles.pressedAction]}
+              >
+                <Text style={[styles.actionLabel, openingProvider && styles.disabledLabel]}>Open Lyft</Text>
+              </Pressable>
             </View>
           </>
         )}
@@ -173,12 +196,24 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  keyboard: { flex: 1 },
-  container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingBottom: 40 },
-  btn: { marginVertical: 8 },
+  keyboard: { flex: 1, backgroundColor: '#F0F0F3' },
+  container: { flexGrow: 1, padding: 20, paddingTop: 28, paddingBottom: 40, gap: 16, width: '100%', maxWidth: 600, alignSelf: 'center' },
+  header: { gap: 8, marginBottom: 4 },
+  title: { color: '#111', fontSize: 28, fontWeight: '700' },
+  subtitle: { color: '#60646C', fontSize: 15, lineHeight: 22 },
+  action: { minHeight: 52, paddingHorizontal: 20, paddingVertical: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  actionLabel: { color: '#fff', fontSize: 17, fontWeight: '600', textAlign: 'center' },
+  confirmAction: { backgroundColor: '#2458a6' },
+  uberAction: { backgroundColor: '#161616' },
+  lyftAction: { backgroundColor: '#9b147d' },
+  disabledAction: { backgroundColor: '#E0E1E6' },
+  disabledLabel: { color: '#60646C' },
+  pressedAction: { opacity: 0.75 },
+  providers: { gap: 12 },
+  confirmedTitle: { color: '#222', fontSize: 17, fontWeight: '600' },
   detailsToggle: { minHeight: 48, justifyContent: 'center', alignItems: 'center' },
   detailsLabel: { color: '#2458a6', fontSize: 14 },
   details: { padding: 12, borderWidth: 1, borderColor: '#ccc', borderRadius: 8 },
   selected: { color: '#444', marginVertical: 4 },
-  confirmed: { marginTop: 16, marginBottom: 8, textAlign: 'center', color: '#444' },
+  confirmed: { padding: 16, gap: 8, backgroundColor: '#fff', borderRadius: 12 },
 });
