@@ -2,7 +2,15 @@ import Constants from 'expo-constants';
 
 import type { Location } from '@/types/location';
 
-export async function searchAddresses(query: string): Promise<Location[]> {
+export type AddressSearchOptions = {
+  proximity?: Pick<Location, 'latitude' | 'longitude'>;
+  signal?: AbortSignal;
+};
+
+export async function searchAddresses(
+  query: string,
+  { proximity, signal }: AddressSearchOptions = {},
+): Promise<Location[]> {
   const text = query.trim();
   if (!text) return [];
 
@@ -11,12 +19,22 @@ export async function searchAddresses(query: string): Promise<Location[]> {
     throw new Error('Geoapify API key is missing from Expo configuration.');
   }
 
-  const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text)}&limit=5&format=geojson&apiKey=${encodeURIComponent(apiKey)}`;
+  if (proximity && (
+    !Number.isFinite(proximity.latitude) || Math.abs(proximity.latitude) > 90 ||
+    !Number.isFinite(proximity.longitude) || Math.abs(proximity.longitude) > 180
+  )) {
+    throw new Error('Address search proximity must contain valid coordinates.');
+  }
+  const bias = proximity
+    ? `&bias=proximity:${proximity.longitude},${proximity.latitude}`
+    : '';
+  const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text)}&limit=5&format=geojson&lang=en&filter=countrycode:us${bias}&apiKey=${encodeURIComponent(apiKey)}`;
 
   let response: Response;
   try {
-    response = await fetch(url);
-  } catch {
+    response = await fetch(url, { signal });
+  } catch (error) {
+    if (signal?.aborted) throw error;
     throw new Error('Geoapify address search failed. Check your connection and try again.');
   }
 
@@ -27,7 +45,8 @@ export async function searchAddresses(query: string): Promise<Location[]> {
   let data: unknown;
   try {
     data = await response.json();
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw error;
     throw new Error('Geoapify returned an invalid JSON response.');
   }
 
