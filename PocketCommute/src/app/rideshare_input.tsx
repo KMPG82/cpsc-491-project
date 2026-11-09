@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import * as ExpoLocation from 'expo-location';
 import {
   Alert,
   Button,
@@ -20,8 +21,41 @@ import { lyftUrls, openRideApp, uberUrls } from '@/utilities/rideshare';
 type RideLocations = { pickup: Location; destination: Location };
 
 export default function HomeScreen() {
-  const pickup = useAddressAutocomplete();
-  const destination = useAddressAutocomplete();
+  const [proximity, setProximity] = useState<Pick<Location, 'latitude' | 'longitude'>>();
+  const locationRequest = useRef<Promise<Pick<Location, 'latitude' | 'longitude'> | undefined> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    // Share the one-shot request across effect replays; never request per edit.
+    if (!locationRequest.current) {
+      locationRequest.current = (async () => {
+        try {
+          let permission = await ExpoLocation.getForegroundPermissionsAsync();
+          if (!permission.granted && permission.status === 'undetermined' && permission.canAskAgain) {
+            permission = await ExpoLocation.requestForegroundPermissionsAsync();
+          }
+          if (!permission.granted) return;
+          const { coords } = await ExpoLocation.getCurrentPositionAsync({
+            accuracy: ExpoLocation.Accuracy.Balanced,
+          });
+          const { latitude, longitude } = coords;
+          if (Number.isFinite(latitude) && Math.abs(latitude) <= 90 &&
+              Number.isFinite(longitude) && Math.abs(longitude) <= 180) {
+            return { latitude, longitude };
+          }
+        } catch {
+          // Proximity only improves ranking; manual search remains available.
+        }
+      })();
+    }
+    void locationRequest.current.then((coordinates) => {
+      if (active && coordinates) setProximity(coordinates);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const pickup = useAddressAutocomplete({ proximity });
+  const destination = useAddressAutocomplete({ proximity });
   const [confirmed, setConfirmed] = useState<RideLocations | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const confirmedRef = useRef<RideLocations | null>(null);
