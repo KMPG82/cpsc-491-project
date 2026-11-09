@@ -114,6 +114,9 @@ export default function HomeScreen() {
   return (
     <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
+        style={styles.scroll}
+        contentInsetAdjustmentBehavior="automatic"
+        automaticallyAdjustsScrollIndicatorInsets
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -197,6 +200,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   keyboard: { flex: 1, backgroundColor: '#F0F0F3' },
+  scroll: { flex: 1 },
   container: { flexGrow: 1, padding: 20, paddingTop: 28, paddingBottom: 40, gap: 16, width: '100%', maxWidth: 600, alignSelf: 'center' },
   header: { gap: 8, marginBottom: 4 },
   title: { color: '#111', fontSize: 28, fontWeight: '700' },
