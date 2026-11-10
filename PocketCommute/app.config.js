@@ -10,7 +10,8 @@ export default {
     userInterfaceStyle: "automatic",
     
     "android": {
-      "package": "com.anonymous.PocketCommute"
+      "package": "com.anonymous.PocketCommute",
+      "gradleArguments": ["--no-build-cache"]
     },
     
     plugins: [
@@ -22,11 +23,23 @@ export default {
           androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
         },
       ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
     ],
 
     experiments: {
       typedRoutes: true,
       reactCompiler: true,
+    },
+
+    extra: {
+      googleMapsRoutesApiKey: process.env.GOOGLE_MAPS_API_KEY,
+      geoapifyApiKey: process.env.GEOAPIFY_API_KEY,
+      hereRoutingApiKey: process.env.HERE_API_KEY,
     },
   },
 };

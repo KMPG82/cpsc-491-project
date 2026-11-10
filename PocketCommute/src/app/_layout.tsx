@@ -1,11 +1,18 @@
-import { PaperProvider } from 'react-native-paper';
+import { Stack } from "expo-router";
 
-import AppTabs from '@/components/app-tabs';
-
-export default function TabLayout() {
+//provides navigation to other screens that are not part of the tab navigation
+export default function RootLayout() {
   return (
-    <PaperProvider>
-      <AppTabs/>
-    </PaperProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+      <Stack.Screen
+        name="navigation"
+        options={{
+          title: "",
+          headerShown: true,
+        }}
+      />
+    </Stack>
   );
 }
