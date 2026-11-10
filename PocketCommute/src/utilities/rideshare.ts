@@ -29,7 +29,10 @@ export function lyftUrls(pickup: Location, destination: Location): RideUrls {
   const query =
     `id=lyft&pickup[latitude]=${pickup.latitude}&pickup[longitude]=${pickup.longitude}` +
     `&destination[latitude]=${destination.latitude}` +
-    `&destination[longitude]=${destination.longitude}`;
+    `&destination[longitude]=${destination.longitude}` +
+    // Optional experimental labels; provider handling must be tested on-device.
+    `&pickup[address]=${enc(pickup.formattedAddress)}` +
+    `&destination[address]=${enc(destination.formattedAddress)}`;
 
   return {
     app: `lyft://ridetype?${query}`,
