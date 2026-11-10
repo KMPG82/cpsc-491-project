@@ -181,8 +181,9 @@ export default function navigation() {
 
     let googleFuelGallons = 0;
     if (mode == "DRIVE") {
-      googleFuelGallons = calculateFuelConsumptionEstimate(
-        googleRoute.distanceMeters,
+      googleFuelGallons = convertToGallons(
+        Number(googleRoute.travelAdvisory?.fuelConsumptionMicroliters),
+        "microliters",
       );
       console.log("Google route fuel consumption:", googleFuelGallons);
     }
@@ -270,7 +271,7 @@ export default function navigation() {
       googleDistanceMiles,
     );
 
-    //// Normalized values for Directions
+    // Normalized values for Directions
     const normalizedGoogleDirections = normalize(
       numberOfGoogleDirections,
       numberOfHereDirections,
@@ -419,7 +420,10 @@ export default function navigation() {
 
       if (mode == "DRIVE") {
         setConvertedGoogleFuel(
-          calculateFuelConsumptionEstimate(googleRoute.distanceMeters),
+          convertToGallons(
+            Number(googleRoute.travelAdvisory?.fuelConsumptionMicroliters),
+            "microliters",
+          ),
         );
       }
 
@@ -699,17 +703,20 @@ const styles = StyleSheet.create({
   },
   bottomPanelContainer: {
     flex: 1,
+    paddingRight: 5,
+    paddingLeft: 5,
   },
   directionContainer: {
     flex: 1,
     flexDirection: "row",
-    paddingRight: 10,
+    paddingRight: 5,
   },
   bold: {
     fontWeight: "bold",
   },
   direction: {
     marginBottom: 10,
+    paddingRight: 5,
   },
   changeRouteDetailsButtonContainer: {
     flexDirection: "row",
