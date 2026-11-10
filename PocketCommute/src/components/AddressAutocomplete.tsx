@@ -32,7 +32,7 @@ export default function AddressAutocomplete({ label, placeholder, autocomplete }
       )}
       {loading && (
         <View style={styles.status}>
-          <ActivityIndicator accessibilityLabel={`Searching ${label}`} color="#2458a6" />
+          <ActivityIndicator accessibilityLabel={`Searching ${label}`} color="#6750A4" />
           <Text style={styles.text}>Searching addresses…</Text>
         </View>
       )}
@@ -50,7 +50,12 @@ export default function AddressAutocomplete({ label, placeholder, autocomplete }
           onPress={() => selectSuggestion(location)}
           style={({ pressed }) => [styles.suggestion, pressed && styles.pressed]}
         >
-          <Text style={styles.text}>{location.formattedAddress}</Text>
+          <Text style={styles.suggestionPrimary}>{location.formattedAddress.split(',')[0]}</Text>
+          {location.formattedAddress.includes(',') && (
+            <Text style={styles.suggestionSecondary}>
+              {location.formattedAddress.slice(location.formattedAddress.indexOf(',') + 1).trim()}
+            </Text>
+          )}
         </Pressable>
       ))}
     </View>
@@ -58,14 +63,16 @@ export default function AddressAutocomplete({ label, placeholder, autocomplete }
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 10, padding: 16, borderWidth: 1, borderColor: '#E0E1E6', borderRadius: 16, backgroundColor: '#fff' },
+  container: { gap: 6, padding: 12, borderWidth: 1, borderColor: '#504f4f5d', borderRadius: 15, backgroundColor: '#fff' },
   heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  badge: { color: '#235c3b', backgroundColor: '#e9f4ed', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, fontSize: 12, fontWeight: '600' },
-  selectedAddress: { color: '#222', fontSize: 15, lineHeight: 22 },
+  badge: { color: '#513784', backgroundColor: '#F0EAF8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, fontSize: 12, fontWeight: '600' },
+  selectedAddress: { color: '#222', fontSize: 14, lineHeight: 20 },
   label: { color: '#222', fontSize: 16, fontWeight: '600' },
-  input: { minHeight: 48, borderWidth: 1, borderColor: '#b6b9c0', borderRadius: 10, padding: 12, color: '#222', backgroundColor: '#F0F0F3', fontSize: 16 },
-  suggestion: { minHeight: 48, justifyContent: 'center', padding: 12, borderWidth: 1, borderColor: '#ccc', borderRadius: 8, backgroundColor: '#fff' },
-  pressed: { backgroundColor: '#e8eef7' },
+  input: { minHeight: 48, borderWidth: 1, borderColor: '#b6aec7', borderRadius: 24, padding: 12, color: '#222', backgroundColor: '#F5F1FA', fontSize: 16 },
+  suggestion: { minHeight: 48, justifyContent: 'center', padding: 10, gap: 2, borderBottomWidth: 1, borderColor: '#504f4f5d', borderRadius: 6, backgroundColor: '#fff' },
+  pressed: { backgroundColor: '#F0EAF8' },
+  suggestionPrimary: { color: '#25202d', fontSize: 16, lineHeight: 22, fontWeight: '600' },
+  suggestionSecondary: { color: '#60646C', fontSize: 14, lineHeight: 20 },
   text: { color: '#222', fontSize: 16, lineHeight: 23 },
   error: { color: '#a01818', fontSize: 16 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 8 },

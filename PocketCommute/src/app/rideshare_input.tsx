@@ -123,8 +123,8 @@ export default function HomeScreen() {
         automaticallyAdjustKeyboardInsets={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Plan your ride</Text>
-          <Text style={styles.subtitle}>Choose a suggestion for each location, then confirm your trip.</Text>
+          <Text style={styles.title}>Rideshare</Text>
+          <Text style={styles.subtitle}>Select your pickup and destination.</Text>
         </View>
         <AddressAutocomplete label="Pickup" placeholder="Enter a pickup address" autocomplete={fieldState(pickup)} />
         <AddressAutocomplete label="Destination" placeholder="Enter a destination address" autocomplete={fieldState(destination)} />
@@ -146,8 +146,8 @@ export default function HomeScreen() {
         {confirmed && (
           <>
             <View style={styles.confirmed}>
-              <Text style={styles.confirmedTitle}>Ready to open your ride app</Text>
-              <Text style={styles.subtitle}>Your selected addresses are shown above. Check both pins in the ride app before requesting a ride.</Text>
+              <Text style={styles.confirmedTitle}>Your ride locations are confirmed</Text>
+              <Text style={styles.subtitle}>Check both pins in your ride app before requesting a ride.</Text>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -199,25 +199,25 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  keyboard: { flex: 1, backgroundColor: '#F0F0F3' },
+  keyboard: { flex: 1, backgroundColor: '#FAF8FC' },
   scroll: { flex: 1 },
-  container: { flexGrow: 1, padding: 20, paddingTop: 28, paddingBottom: 40, gap: 16, width: '100%', maxWidth: 600, alignSelf: 'center' },
-  header: { gap: 8, marginBottom: 4 },
-  title: { color: '#111', fontSize: 28, fontWeight: '700' },
+  container: { flexGrow: 1, padding: 16, paddingTop: 16, paddingBottom: 40, gap: 10, width: '100%', maxWidth: 600, alignSelf: 'center' },
+  header: { gap: 4, marginBottom: 2 },
+  title: { color: '#35244F', fontSize: 24, fontWeight: '700' },
   subtitle: { color: '#60646C', fontSize: 15, lineHeight: 22 },
-  action: { minHeight: 52, paddingHorizontal: 20, paddingVertical: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  action: { minHeight: 52, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   actionLabel: { color: '#fff', fontSize: 17, fontWeight: '600', textAlign: 'center' },
-  confirmAction: { backgroundColor: '#2458a6' },
+  confirmAction: { backgroundColor: '#6750A4' },
   uberAction: { backgroundColor: '#161616' },
   lyftAction: { backgroundColor: '#9b147d' },
   disabledAction: { backgroundColor: '#E0E1E6' },
   disabledLabel: { color: '#60646C' },
   pressedAction: { opacity: 0.75 },
-  providers: { gap: 12 },
+  providers: { gap: 10 },
   confirmedTitle: { color: '#222', fontSize: 17, fontWeight: '600' },
   detailsToggle: { minHeight: 48, justifyContent: 'center', alignItems: 'center' },
-  detailsLabel: { color: '#2458a6', fontSize: 14 },
+  detailsLabel: { color: '#6750A4', fontSize: 14 },
   details: { padding: 12, borderWidth: 1, borderColor: '#ccc', borderRadius: 8 },
   selected: { color: '#444', marginVertical: 4 },
-  confirmed: { padding: 16, gap: 8, backgroundColor: '#fff', borderRadius: 12 },
+  confirmed: { padding: 12, gap: 4, backgroundColor: '#F0EAF8', borderRadius: 12 },
 });
