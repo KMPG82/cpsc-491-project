@@ -72,6 +72,10 @@ export async function getHereRoute(
     }
   }
 
+  if (transportMode == "pedestrian") {
+    params.append("avoid[features]", "ferry");
+  }
+
   try {
     // const startTime = performance.now();
 
