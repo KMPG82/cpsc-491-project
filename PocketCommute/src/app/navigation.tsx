@@ -471,7 +471,7 @@ export default function navigation() {
     }
   }, [errorMessage]);
 
-  //show error message if any occur during API requests
+  //shows error message if any occur during API requests
   if (errorMessage) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -482,6 +482,7 @@ export default function navigation() {
     );
   }
 
+  //shows loading screen if still retrieving routes
   if (retrievingGoogleRoute || retrievingHereRoute) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -493,6 +494,7 @@ export default function navigation() {
     );
   }
 
+  //displays map with routes and details
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <MapView
