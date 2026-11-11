@@ -85,8 +85,8 @@ export default function navigation() {
     destinationName: string;
   };
 
-  const requestStartTime = useRef<number>(0);
-  const evaluationTimeLogged = useRef<boolean>(false);
+  // const requestStartTime = useRef<number>(0);
+  // const evaluationTimeLogged = useRef<boolean>(false);
 
   //convert to original data types
   const shouldAvoidHighways: boolean = avoidHighways === "true";
@@ -494,7 +494,7 @@ export default function navigation() {
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <MapView
         style={styles.map}
         initialRegion={{
@@ -684,7 +684,7 @@ export default function navigation() {
           </>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   },
   map: {
     width: "100%",
-    flex: 3,
+    flex: 1.5,
   },
   loadingContainer: {
     flex: 1,
