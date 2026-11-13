@@ -574,10 +574,16 @@ export default function navigation() {
 
               <Text variant="bodyLarge">
                 <Text style={styles.bold}>Duration: </Text>
-                {convertedGoogleTime} min
+                {convertedGoogleTime >= 60
+                  ? `${Math.floor(convertedGoogleTime / 60)} hr ${convertedGoogleTime % 60} min`
+                  : `${convertedGoogleTime} min`}
                 {googleRouteChosen &&
                   isGoogleRouteFaster &&
-                  `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
+                  `, ${
+                    Math.abs(convertedGoogleTime - convertedHereTime) >= 60
+                      ? `${Math.floor(Math.abs(convertedGoogleTime - convertedHereTime) / 60)} hr ${Math.abs(convertedGoogleTime - convertedHereTime) % 60} min faster`
+                      : `${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`
+                  }`}
               </Text>
 
               <Text variant="bodyLarge">
@@ -634,10 +640,16 @@ export default function navigation() {
 
               <Text variant="bodyLarge">
                 <Text style={styles.bold}>Duration: </Text>
-                {convertedHereTime} min
+                {convertedHereTime >= 60
+                  ? `${Math.floor(convertedHereTime / 60)} hr ${convertedHereTime % 60} min`
+                  : `${convertedHereTime} min`}
                 {hereRouteChosen &&
                   isHereRouteFaster &&
-                  `, ${Math.abs(convertedGoogleTime - convertedHereTime)} min faster`}
+                  `, ${
+                    Math.abs(convertedHereTime - convertedGoogleTime) >= 60
+                      ? `${Math.floor(Math.abs(convertedHereTime - convertedGoogleTime) / 60)} hr ${Math.abs(convertedHereTime - convertedGoogleTime) % 60} min faster`
+                      : `${Math.abs(convertedHereTime - convertedGoogleTime)} min faster`
+                  }`}
               </Text>
 
               <Text variant="bodyLarge">
