@@ -336,15 +336,15 @@ export default function navigation() {
       } else if (priority == "distance") {
         score = 0.3 * time + 0.5 * distance + 0.1 * directions + 0.1 * fuel;
       } else if (priority == "directions") {
-        score = 0.2 * time + 0.2 * distance + 0.4 * directions + 0.2 * fuel;
+        score = 0.3 * time + 0.1 * distance + 0.5 * directions + 0.1 * fuel;
       } else if (priority == "fuel") {
-        score = 0.2 * time + 0.2 * distance + 0.2 * directions + 0.4 * fuel;
+        score = 0.3 * time + 0.1 * distance + 0.1 * directions + 0.5 * fuel;
       }
     } else {
       if (priority == "distance") {
         score = 0.4 * time + 0.5 * distance + 0.1 * directions;
       } else if (priority == "directions") {
-        score = 0.2 * time + 0.2 * distance + 0.5 * directions;
+        score = 0.4 * time + 0.1 * distance + 0.5 * directions;
       } else {
         //time, also used if fuel was left selected after switching from driving
         score = 0.5 * time + 0.4 * distance + 0.1 * directions;
