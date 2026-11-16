@@ -56,8 +56,8 @@ export default function App() {
 
   const [timePriorityRank, setTimePriorityRank] = useState(1);
   const [distancePriorityRank, setDistancePriorityRank] = useState(2);
-  const [directionsPriorityRank, setDirectionsPriorityRank] = useState(3);
-  const [fuelPriorityRank, setFuelPriorityRank] = useState(4);
+  const [fuelPriorityRank, setFuelPriorityRank] = useState(3);
+  const [directionsPriorityRank, setDirectionsPriorityRank] = useState(4);
 
   //updates the factors priority rankings by swapping the ranks of the involved the factors
   function updatePriorityRank(
@@ -319,7 +319,9 @@ export default function App() {
                 <View style={styles.preferencesContainer}>
                   <View style={styles.optionsContainer}>
                     <View style={styles.option}>
-                      <Text variant="bodyLarge">Time</Text>
+                      <Text variant="bodyLarge" style={styles.priorityText}>
+                        Time
+                      </Text>
                       <Menu
                         visible={openRanksDropdown === "time"}
                         onDismiss={() => setOpenRanksDropdown(null)}
@@ -347,7 +349,9 @@ export default function App() {
                     </View>
 
                     <View style={styles.option}>
-                      <Text variant="bodyLarge">Distance</Text>
+                      <Text variant="bodyLarge" style={styles.priorityText}>
+                        Distance
+                      </Text>
                       <Menu
                         visible={openRanksDropdown === "distance"}
                         onDismiss={() => setOpenRanksDropdown(null)}
@@ -374,8 +378,43 @@ export default function App() {
                       </Menu>
                     </View>
 
+                    {isDriving && (
+                      <View style={styles.option}>
+                        <Text variant="bodyLarge" style={styles.priorityText}>
+                          Fuel
+                        </Text>
+                        <Menu
+                          visible={openRanksDropdown === "fuel"}
+                          onDismiss={() => setOpenRanksDropdown(null)}
+                          anchor={
+                            <Button
+                              mode="outlined"
+                              compact
+                              disabled={!isDriving}
+                              onPress={() => setOpenRanksDropdown("fuel")}
+                            >
+                              {fuelPriorityRank.toString()}
+                            </Button>
+                          }
+                        >
+                          {[1, 2, 3, 4].map((rank) => (
+                            <Menu.Item
+                              key={rank}
+                              onPress={() => {
+                                updatePriorityRank("fuel", rank);
+                                setOpenRanksDropdown(null);
+                              }}
+                              title={rank.toString()}
+                            />
+                          ))}
+                        </Menu>
+                      </View>
+                    )}
+
                     <View style={styles.option}>
-                      <Text variant="bodyLarge">Directions</Text>
+                      <Text variant="bodyLarge" style={styles.priorityText}>
+                        Directions
+                      </Text>
                       <Menu
                         visible={openRanksDropdown === "directions"}
                         onDismiss={() => setOpenRanksDropdown(null)}
@@ -394,35 +433,6 @@ export default function App() {
                             key={rank}
                             onPress={() => {
                               updatePriorityRank("directions", rank);
-                              setOpenRanksDropdown(null);
-                            }}
-                            title={rank.toString()}
-                          />
-                        ))}
-                      </Menu>
-                    </View>
-
-                    <View style={styles.option}>
-                      <Text variant="bodyLarge">Fuel</Text>
-                      <Menu
-                        visible={openRanksDropdown === "fuel"}
-                        onDismiss={() => setOpenRanksDropdown(null)}
-                        anchor={
-                          <Button
-                            mode="outlined"
-                            compact
-                            disabled={!isDriving}
-                            onPress={() => setOpenRanksDropdown("fuel")}
-                          >
-                            {fuelPriorityRank.toString()}
-                          </Button>
-                        }
-                      >
-                        {[1, 2, 3, 4].map((rank) => (
-                          <Menu.Item
-                            key={rank}
-                            onPress={() => {
-                              updatePriorityRank("fuel", rank);
                               setOpenRanksDropdown(null);
                             }}
                             title={rank.toString()}
@@ -595,5 +605,8 @@ const styles = StyleSheet.create({
   },
   centerText: {
     textAlign: "center",
+  },
+  priorityText: {
+    paddingRight: 3,
   },
 });
