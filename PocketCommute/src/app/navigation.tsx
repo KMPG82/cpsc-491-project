@@ -61,10 +61,12 @@ type Coordinate = {
   longitude: number;
 };
 
+const drivingWeights = [0.55, 0.2, 0.15, 0.1];
+const walkingBikingWeights = [0.65, 0.25, 0.1];
+
 export default function navigation() {
   //retrieve preferences, current location, and destination information
   const {
-    priority,
     mode,
     avoidHighways,
     avoidTolls,
@@ -73,8 +75,11 @@ export default function navigation() {
     destinationLatitude,
     destinationLongitude,
     destinationName,
+    timePriorityRank,
+    distancePriorityRank,
+    directionsPriorityRank,
+    fuelPriorityRank,
   } = useLocalSearchParams() as {
-    priority: string;
     mode: string;
     avoidHighways: string;
     avoidTolls: string;
@@ -83,6 +88,10 @@ export default function navigation() {
     destinationLatitude: string;
     destinationLongitude: string;
     destinationName: string;
+    timePriorityRank: string;
+    distancePriorityRank: string;
+    directionsPriorityRank: string;
+    fuelPriorityRank: string;
   };
 
   // const requestStartTime = useRef<number>(0);
@@ -95,6 +104,10 @@ export default function navigation() {
   const currentLocationLong: number = parseFloat(currentLocationLongitude);
   const destinationLat: number = parseFloat(destinationLatitude);
   const destinationLong: number = parseFloat(destinationLongitude);
+  const timePriorityRanking: number = parseFloat(timePriorityRank);
+  const distancePriorityRanking: number = parseFloat(distancePriorityRank);
+  const directionsPriorityRanking: number = parseFloat(directionsPriorityRank);
+  const fuelPriorityRanking: number = parseFloat(fuelPriorityRank);
 
   const [googleRoute, setGoogleRoute] = useState<GoogleRoute | null>(null);
   const [retrievingGoogleRoute, setRetrievingGoogleRoute] =
@@ -329,26 +342,37 @@ export default function navigation() {
     directions: number,
     fuel: number,
   ): number => {
-    let score = 0;
+    let weightsInUse = null;
     if (mode == "DRIVE") {
-      if (priority == "time") {
-        score = 0.5 * time + 0.3 * distance + 0.1 * directions + 0.1 * fuel;
-      } else if (priority == "distance") {
-        score = 0.3 * time + 0.5 * distance + 0.1 * directions + 0.1 * fuel;
-      } else if (priority == "directions") {
-        score = 0.3 * time + 0.1 * distance + 0.5 * directions + 0.1 * fuel;
-      } else if (priority == "fuel") {
-        score = 0.3 * time + 0.1 * distance + 0.1 * directions + 0.5 * fuel;
-      }
+      weightsInUse = drivingWeights;
     } else {
-      if (priority == "distance") {
-        score = 0.4 * time + 0.5 * distance + 0.1 * directions;
-      } else if (priority == "directions") {
-        score = 0.4 * time + 0.1 * distance + 0.5 * directions;
-      } else {
-        //time, also used if fuel was left selected after switching from driving
-        score = 0.5 * time + 0.4 * distance + 0.1 * directions;
-      }
+      weightsInUse = walkingBikingWeights;
+    }
+
+    const timeWeight = weightsInUse[timePriorityRanking - 1];
+    const distanceWeight = weightsInUse[distancePriorityRanking - 1];
+    const directionsWeight = weightsInUse[directionsPriorityRanking - 1];
+
+    console.log("time weight:", timeWeight);
+    console.log("distance weight:", distanceWeight);
+    console.log("directions weight:", directionsWeight);
+
+    let score = 0;
+
+    if (mode == "DRIVE") {
+      const fuelWeight = weightsInUse[fuelPriorityRanking - 1];
+      console.log("fuel weight:", fuelWeight);
+
+      score =
+        timeWeight * time +
+        distanceWeight * distance +
+        directionsWeight * directions +
+        fuelWeight * fuel;
+    } else {
+      score =
+        timeWeight * time +
+        distanceWeight * distance +
+        directionsWeight * directions;
     }
 
     // console.log("score: ", score);
