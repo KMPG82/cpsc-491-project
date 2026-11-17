@@ -12,6 +12,7 @@ import {
   RadioButton,
   Checkbox,
   ActivityIndicator,
+  Menu,
 } from "react-native-paper";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
@@ -26,7 +27,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [preferences, setPreferences] = useState(false);
   const [mode, setMode] = useState("DRIVE");
-  const [priority, setPriority] = useState("time");
+  //const [priority, setPriority] = useState("time");
   const [isDriving, setIsDriving] = useState(true);
   const [avoidHighways, setAvoidHighways] = useState(false);
   const [avoidTolls, setAvoidTolls] = useState(false);
@@ -49,6 +50,66 @@ export default function App() {
 
   const router = useRouter();
 
+  const [openRanksDropdown, setOpenRanksDropdown] = useState<string | null>(
+    null,
+  );
+
+  const [timePriorityRank, setTimePriorityRank] = useState(1);
+  const [distancePriorityRank, setDistancePriorityRank] = useState(2);
+  const [fuelPriorityRank, setFuelPriorityRank] = useState(3);
+  const [directionsPriorityRank, setDirectionsPriorityRank] = useState(4);
+
+  //updates the factors priority rankings by swapping the ranks of the involved the factors
+  function updatePriorityRank(
+    factor: "time" | "distance" | "directions" | "fuel",
+    newRank: number,
+  ) {
+    let currentRank = 0;
+    let otherFactor: "time" | "distance" | "directions" | "fuel" | undefined;
+
+    if (factor == "time") {
+      currentRank = timePriorityRank;
+    } else if (factor == "distance") {
+      currentRank = distancePriorityRank;
+    } else if (factor == "directions") {
+      currentRank = directionsPriorityRank;
+    } else {
+      currentRank = fuelPriorityRank;
+    }
+
+    if (timePriorityRank == newRank) {
+      otherFactor = "time";
+    } else if (distancePriorityRank == newRank) {
+      otherFactor = "distance";
+    } else if (directionsPriorityRank == newRank) {
+      otherFactor = "directions";
+    } else if (fuelPriorityRank == newRank) {
+      otherFactor = "fuel";
+    }
+
+    if (otherFactor != factor) {
+      if (factor == "time") {
+        setTimePriorityRank(newRank);
+      } else if (factor == "distance") {
+        setDistancePriorityRank(newRank);
+      } else if (factor == "directions") {
+        setDirectionsPriorityRank(newRank);
+      } else {
+        setFuelPriorityRank(newRank);
+      }
+
+      if (otherFactor == "time") {
+        setTimePriorityRank(currentRank);
+      } else if (otherFactor == "distance") {
+        setDistancePriorityRank(currentRank);
+      } else if (otherFactor == "directions") {
+        setDirectionsPriorityRank(currentRank);
+      } else {
+        setFuelPriorityRank(currentRank);
+      }
+    }
+  }
+
   useEffect(() => {
     getCurrentLocation(
       setCurrentLocation,
@@ -63,6 +124,20 @@ export default function App() {
       Alert.alert("ERROR", errorMessage, [{ text: "OK" }]);
     }
   }, [errorMessage]);
+
+  useEffect(() => {
+    if (!isDriving && fuelPriorityRank !== 4) {
+      if (timePriorityRank == 4) {
+        setTimePriorityRank(fuelPriorityRank);
+      } else if (distancePriorityRank == 4) {
+        setDistancePriorityRank(fuelPriorityRank);
+      } else if (directionsPriorityRank == 4) {
+        setDirectionsPriorityRank(fuelPriorityRank);
+      }
+
+      setFuelPriorityRank(4);
+    }
+  }, [isDriving]);
 
   //show error message if any occur during API requests
   if (errorMessage) {
@@ -168,34 +243,9 @@ export default function App() {
                 return;
               }
 
-              if (priority == "fuel" && mode != "DRIVE") {
-                console.log("Cannot choose fuel priority if not driving.");
-                Alert.alert(
-                  "ERROR",
-                  "Please select another priority or switch your mode of transportion to Drive.",
-                  [{ text: "OK" }],
-                );
-                return;
-              }
-
-              // console.log(
-              //   "Preferences:",
-              //   priority,
-              //   mode,
-              //   avoidHighways,
-              //   avoidTolls,
-              //   search,
-              //   currentLocation.coords.latitude,
-              //   currentLocation.coords.longitude,
-              //   destination.geometry.coordinates[1],
-              //   destination.geometry.coordinates[0],
-              //   destination.properties.name,
-              // );
-
               router.push({
                 pathname: "/navigation",
                 params: {
-                  priority,
                   mode,
                   avoidHighways: String(avoidHighways),
                   avoidTolls: String(avoidTolls),
@@ -212,6 +262,10 @@ export default function App() {
                     destination.geometry.coordinates[0],
                   ),
                   destinationName: destination.properties.name,
+                  timePriorityRank: String(timePriorityRank),
+                  distancePriorityRank: String(distancePriorityRank),
+                  directionsPriorityRank: String(directionsPriorityRank),
+                  fuelPriorityRank: String(fuelPriorityRank),
                 },
               });
             }}
@@ -235,10 +289,6 @@ export default function App() {
                     onValueChange={(newValue) => {
                       setMode(newValue);
                       setIsDriving(newValue == "DRIVE");
-
-                      if (newValue != "DRIVE" && priority == "fuel") {
-                        setPriority("time");
-                      }
                     }}
                     value={mode}
                   >
@@ -264,37 +314,133 @@ export default function App() {
 
               <View style={styles.preferencesParentContainer}>
                 <Text variant="titleLarge" style={styles.preferencesTitle}>
-                  Priority
+                  Priority Ranking
                 </Text>
                 <View style={styles.preferencesContainer}>
-                  <RadioButton.Group
-                    onValueChange={(newValue) => {
-                      setPriority(newValue);
-                    }}
-                    value={priority}
-                  >
-                    <View style={styles.optionsContainer}>
-                      <View style={styles.option}>
-                        <Text variant="bodyLarge">Time</Text>
-                        <RadioButton value="time" />
-                      </View>
-
-                      <View style={styles.option}>
-                        <Text variant="bodyLarge">Distance</Text>
-                        <RadioButton value="distance" />
-                      </View>
-
-                      <View style={styles.option}>
-                        <Text variant="bodyLarge">Directions</Text>
-                        <RadioButton value="directions" />
-                      </View>
-
-                      <View style={styles.option}>
-                        <Text variant="bodyLarge">Fuel</Text>
-                        <RadioButton value="fuel" disabled={!isDriving} />
-                      </View>
+                  <View style={styles.optionsContainer}>
+                    <View style={styles.option}>
+                      <Text variant="bodyLarge" style={styles.priorityText}>
+                        Time
+                      </Text>
+                      <Menu
+                        visible={openRanksDropdown === "time"}
+                        onDismiss={() => setOpenRanksDropdown(null)}
+                        anchor={
+                          <Button
+                            mode="outlined"
+                            compact
+                            onPress={() => setOpenRanksDropdown("time")}
+                          >
+                            {timePriorityRank.toString()}
+                          </Button>
+                        }
+                      >
+                        {(isDriving ? [1, 2, 3, 4] : [1, 2, 3]).map((rank) => (
+                          <Menu.Item
+                            key={rank}
+                            onPress={() => {
+                              updatePriorityRank("time", rank);
+                              setOpenRanksDropdown(null);
+                            }}
+                            title={rank.toString()}
+                          />
+                        ))}
+                      </Menu>
                     </View>
-                  </RadioButton.Group>
+
+                    <View style={styles.option}>
+                      <Text variant="bodyLarge" style={styles.priorityText}>
+                        Distance
+                      </Text>
+                      <Menu
+                        visible={openRanksDropdown === "distance"}
+                        onDismiss={() => setOpenRanksDropdown(null)}
+                        anchor={
+                          <Button
+                            mode="outlined"
+                            compact
+                            onPress={() => setOpenRanksDropdown("distance")}
+                          >
+                            {distancePriorityRank.toString()}
+                          </Button>
+                        }
+                      >
+                        {(isDriving ? [1, 2, 3, 4] : [1, 2, 3]).map((rank) => (
+                          <Menu.Item
+                            key={rank}
+                            onPress={() => {
+                              updatePriorityRank("distance", rank);
+                              setOpenRanksDropdown(null);
+                            }}
+                            title={rank.toString()}
+                          />
+                        ))}
+                      </Menu>
+                    </View>
+
+                    {isDriving && (
+                      <View style={styles.option}>
+                        <Text variant="bodyLarge" style={styles.priorityText}>
+                          Fuel
+                        </Text>
+                        <Menu
+                          visible={openRanksDropdown === "fuel"}
+                          onDismiss={() => setOpenRanksDropdown(null)}
+                          anchor={
+                            <Button
+                              mode="outlined"
+                              compact
+                              disabled={!isDriving}
+                              onPress={() => setOpenRanksDropdown("fuel")}
+                            >
+                              {fuelPriorityRank.toString()}
+                            </Button>
+                          }
+                        >
+                          {[1, 2, 3, 4].map((rank) => (
+                            <Menu.Item
+                              key={rank}
+                              onPress={() => {
+                                updatePriorityRank("fuel", rank);
+                                setOpenRanksDropdown(null);
+                              }}
+                              title={rank.toString()}
+                            />
+                          ))}
+                        </Menu>
+                      </View>
+                    )}
+
+                    <View style={styles.option}>
+                      <Text variant="bodyLarge" style={styles.priorityText}>
+                        Directions
+                      </Text>
+                      <Menu
+                        visible={openRanksDropdown === "directions"}
+                        onDismiss={() => setOpenRanksDropdown(null)}
+                        anchor={
+                          <Button
+                            mode="outlined"
+                            compact
+                            onPress={() => setOpenRanksDropdown("directions")}
+                          >
+                            {directionsPriorityRank.toString()}
+                          </Button>
+                        }
+                      >
+                        {(isDriving ? [1, 2, 3, 4] : [1, 2, 3]).map((rank) => (
+                          <Menu.Item
+                            key={rank}
+                            onPress={() => {
+                              updatePriorityRank("directions", rank);
+                              setOpenRanksDropdown(null);
+                            }}
+                            title={rank.toString()}
+                          />
+                        ))}
+                      </Menu>
+                    </View>
+                  </View>
                 </View>
               </View>
 
@@ -459,5 +605,8 @@ const styles = StyleSheet.create({
   },
   centerText: {
     textAlign: "center",
+  },
+  priorityText: {
+    paddingRight: 3,
   },
 });
