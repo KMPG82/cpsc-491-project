@@ -20,6 +20,8 @@ import {
   convertToGallons,
 } from "../utilities/conversions";
 
+const DIRECTIONS_DIVIDER = 4;
+
 type GoogleRoute = {
   distanceMeters: number;
   duration: string;
@@ -366,13 +368,13 @@ export default function navigation() {
       score =
         timeWeight * time +
         distanceWeight * distance +
-        directionsWeight * directions +
+        directionsWeight * (directions / DIRECTIONS_DIVIDER) +
         fuelWeight * fuel;
     } else {
       score =
         timeWeight * time +
         distanceWeight * distance +
-        directionsWeight * directions;
+        directionsWeight * (directions / DIRECTIONS_DIVIDER);
     }
 
     // console.log("score: ", score);
