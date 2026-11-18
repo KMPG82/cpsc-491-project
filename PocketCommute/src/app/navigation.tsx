@@ -61,8 +61,8 @@ type Coordinate = {
   longitude: number;
 };
 
-const drivingWeights = [0.55, 0.2, 0.15, 0.1];
-const walkingBikingWeights = [0.65, 0.25, 0.1];
+const drivingWeights = [0.51, 0.24, 0.15, 0.1];
+const walkingBikingWeights = [0.51, 0.34, 0.15];
 
 export default function navigation() {
   //retrieve preferences, current location, and destination information
