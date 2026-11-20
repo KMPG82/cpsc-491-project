@@ -303,10 +303,10 @@ export default function navigation() {
       normalizedHereFuel = normalize(hereFuelGallons, googleFuelGallons);
     }
 
-    // console.log("Google normalized time: ", normalizedGoogleTime);
-    // console.log("Google normalized distance: ", normalizedGoogleDistance);
-    // console.log("Google normalized fuel: ", normalizedGoogleFuel);
-    // console.log("Google normalized directions: ", normalizedGoogleDirections);
+    console.log("Google normalized time: ", normalizedGoogleTime);
+    console.log("Google normalized distance: ", normalizedGoogleDistance);
+    console.log("Google normalized fuel: ", normalizedGoogleFuel);
+    console.log("Google normalized directions: ", normalizedGoogleDirections);
     const googleScore = calculateScore(
       normalizedGoogleTime,
       normalizedGoogleDistance,
@@ -315,10 +315,10 @@ export default function navigation() {
     );
     console.log("Google route score:", googleScore);
 
-    // console.log("HERE normalized time: ", normalizedHereTime);
-    // console.log("HERE normalized distance: ", normalizedHereDistance);
-    // console.log("HERE normalized fuel: ", normalizedHereFuel);
-    // console.log("HERE normalized directions: ", normalizedHereDirections);
+    console.log("HERE normalized time: ", normalizedHereTime);
+    console.log("HERE normalized distance: ", normalizedHereDistance);
+    console.log("HERE normalized fuel: ", normalizedHereFuel);
+    console.log("HERE normalized directions: ", normalizedHereDirections);
     const hereScore = calculateScore(
       normalizedHereTime,
       normalizedHereDistance,
@@ -355,16 +355,10 @@ export default function navigation() {
     const distanceWeight = weightsInUse[distancePriorityRanking - 1];
     const directionsWeight = weightsInUse[directionsPriorityRanking - 1];
 
-    console.log("time weight:", timeWeight);
-    console.log("distance weight:", distanceWeight);
-    console.log("directions weight:", directionsWeight);
-
     let score = 0;
 
     if (mode == "DRIVE") {
       const fuelWeight = weightsInUse[fuelPriorityRanking - 1];
-      console.log("fuel weight:", fuelWeight);
-
       score =
         timeWeight * time +
         distanceWeight * distance +
@@ -377,15 +371,11 @@ export default function navigation() {
         directionsWeight * (directions / DIRECTIONS_DIVIDER);
     }
 
-    // console.log("score: ", score);
     return score;
   };
 
   const normalize = (value1: number, value2: number) => {
     const max = Math.max(value1, value2);
-    // console.log("value1: ", value1);
-    // console.log("value2: ", value2);
-    // console.log("value1 / max: ", value1 / max);
 
     if (max === 0) {
       return 0; // prevents division by zero
