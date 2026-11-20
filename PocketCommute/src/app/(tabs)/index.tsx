@@ -22,6 +22,11 @@ import * as Location from "expo-location";
 import { getCurrentLocation } from "../../utilities/getCurrentLocation";
 import { getSuggestions } from "../../utilities/getSuggestions";
 
+type Coordinate = {
+  latitude: number;
+  longitude: number;
+};
+
 //landing screen: contains search bar, map, and preferences selection
 export default function App() {
   const [search, setSearch] = useState("");
@@ -44,7 +49,7 @@ export default function App() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [destination, setDestination] = useState<any | null>(null);
+  const [destination, setDestination] = useState<Coordinate | null>(null);
 
   const [errorMessage, setErrorMessage] = useState<string>("");
 
@@ -208,7 +213,10 @@ export default function App() {
                         index !== suggestions.length - 1 && styles.suggestion,
                       ]}
                       onPress={() => {
-                        setDestination(suggestion);
+                        setDestination({
+                          latitude: suggestion.geometry.coordinates[1],
+                          longitude: suggestion.geometry.coordinates[0],
+                        });
 
                         setSearch(suggestion.properties.name || "");
 
@@ -256,12 +264,14 @@ export default function App() {
                     currentLocation.coords.longitude,
                   ),
                   destinationLatitude: String(
-                    destination.geometry.coordinates[1],
+                    destination.latitude,
+                    //destination.geometry.coordinates[1],
                   ),
                   destinationLongitude: String(
-                    destination.geometry.coordinates[0],
+                    destination.longitude,
+                    //destination.geometry.coordinates[0],
                   ),
-                  destinationName: destination.properties.name,
+                  //destinationName: destination.properties.name,
                   timePriorityRank: String(timePriorityRank),
                   distancePriorityRank: String(distancePriorityRank),
                   directionsPriorityRank: String(directionsPriorityRank),
@@ -518,12 +528,28 @@ export default function App() {
                   title={name}
                   description={address}
                   onPress={() => {
-                    setDestination(place);
+                    setDestination({
+                      latitude: place.properties.lat,
+                      longitude: place.properties.lon,
+                    });
                     setSearch(name);
                   }}
                 />
               );
             })}
+
+          <Marker
+            coordinate={currentLocation.coords}
+            draggable
+            pinColor="blue"
+            onDragEnd={(event) => {
+              setDestination({
+                latitude: event.nativeEvent.coordinate.latitude,
+                longitude: event.nativeEvent.coordinate.longitude,
+              });
+              setSearch("");
+            }}
+          />
         </MapView>
       </SafeAreaView>
     </PaperProvider>

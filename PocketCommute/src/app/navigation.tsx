@@ -76,7 +76,7 @@ export default function navigation() {
     currentLocationLongitude,
     destinationLatitude,
     destinationLongitude,
-    destinationName,
+    //destinationName,
     timePriorityRank,
     distancePriorityRank,
     directionsPriorityRank,
@@ -89,7 +89,7 @@ export default function navigation() {
     currentLocationLongitude: string;
     destinationLatitude: string;
     destinationLongitude: string;
-    destinationName: string;
+    //destinationName: string;
     timePriorityRank: string;
     distancePriorityRank: string;
     directionsPriorityRank: string;
