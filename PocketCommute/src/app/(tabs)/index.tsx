@@ -539,7 +539,7 @@ export default function App() {
             })}
 
           <Marker
-            coordinate={currentLocation.coords}
+            coordinate={destination ?? currentLocation.coords}
             draggable
             pinColor="blue"
             onDragEnd={(event) => {
