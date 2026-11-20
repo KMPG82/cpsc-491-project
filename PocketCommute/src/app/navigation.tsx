@@ -537,6 +537,7 @@ export default function navigation() {
           longitudeDelta: 0.0421,
         }}
         showsUserLocation={true}
+        toolbarEnabled={false}
       >
         <Marker
           coordinate={{
