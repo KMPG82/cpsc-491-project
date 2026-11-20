@@ -490,7 +490,7 @@ export default function navigation() {
   //shows error message if any occur during API requests
   if (errorMessage) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
         <View style={styles.loadingContainer}>
           <Text style={styles.centerText}>{errorMessage}</Text>
         </View>
@@ -501,7 +501,7 @@ export default function navigation() {
   //shows loading screen if still retrieving routes
   if (retrievingGoogleRoute || retrievingHereRoute) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
           <Text>Loading...</Text>
@@ -527,7 +527,7 @@ export default function navigation() {
 
   //displays map with routes and details
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
       <MapView
         style={styles.map}
         initialRegion={{
@@ -543,7 +543,6 @@ export default function navigation() {
             latitude: destinationLat,
             longitude: destinationLong,
           }}
-          title={destinationName}
           pinColor="red"
         />
 

@@ -142,7 +142,7 @@ export default function App() {
   //show error message if any occur during API requests
   if (errorMessage) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <View style={styles.loadingContainer}>
           <Text style={styles.centerText}>{errorMessage}</Text>
         </View>
@@ -153,7 +153,7 @@ export default function App() {
   //show loading indicator while fetching location and nearby places
   if (!currentLocation || loadingLocationAndNearbyPlaces) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
           <Text style={styles.centerText}>Loading...</Text>
@@ -165,7 +165,7 @@ export default function App() {
   //show map with markers for nearby places, search bar, preferences button, and confirm button
   return (
     <PaperProvider>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <View style={styles.topBar}>
           <IconButton
             icon="dots-vertical"
@@ -490,6 +490,7 @@ export default function App() {
             longitudeDelta: 0.0421,
           }}
           showsUserLocation={true}
+          toolbarEnabled={false}
         >
           {nearbyPlaces &&
             nearbyPlaces.map((place, index) => {
@@ -532,7 +533,7 @@ export default function App() {
 //styling
 const styles = StyleSheet.create({
   map: {
-    height: "100%",
+    flex: 1,
   },
   safeArea: {
     flex: 1,
