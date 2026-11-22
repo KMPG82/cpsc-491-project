@@ -549,6 +549,7 @@ export default function App() {
               });
               setSearch("");
             }}
+            zIndex={10}
           />
         </MapView>
       </SafeAreaView>
