@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as ExpoLocation from "expo-location";
+import MapView, { Marker } from "react-native-maps";
 import {
   Alert,
   Keyboard,
@@ -11,7 +12,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import {
@@ -23,7 +23,7 @@ import { lyftUrls, openRideApp, uberUrls } from "@/utilities/rideshare";
 
 type RideLocations = { pickup: Location; destination: Location };
 
-export default function HomeScreen() {
+export default function rideshare() {
   const [proximity, setProximity] =
     useState<Pick<Location, "latitude" | "longitude">>();
   const locationRequest = useRef<Promise<
@@ -78,16 +78,57 @@ export default function HomeScreen() {
   const handoffInProgress = useRef(false);
   const [openingProvider, setOpeningProvider] = useState(false);
 
+  const [pickupMarker, setPickupMarker] = useState<Location | null>(null);
+  const [destinationMarker, setDestinationMarker] = useState<Location | null>(
+    null,
+  );
+
+  let pickupMapLocation: Location | null = null;
+  let destinationMapLocation: Location | null = null;
+
+  let mapCenterCoords: Location | null = null;
+
   const invalidateConfirmation = () => {
     confirmedRef.current = null;
     setConfirmed(null);
     setShowDetails(false);
   };
 
+  if (pickupMarker) {
+    pickupMapLocation = pickupMarker;
+  } else if (pickup.selectedLocation) {
+    pickupMapLocation = pickup.selectedLocation;
+  } else if (proximity) {
+    pickupMapLocation = {
+      formattedAddress: "Current location",
+      latitude: proximity.latitude,
+      longitude: proximity.longitude,
+    };
+  }
+
+  if (destinationMarker) {
+    destinationMapLocation = destinationMarker;
+  } else if (destination.selectedLocation) {
+    destinationMapLocation = destination.selectedLocation;
+  } else if (proximity) {
+    destinationMapLocation = {
+      formattedAddress: "Current location",
+      latitude: proximity.latitude,
+      longitude: proximity.longitude,
+    };
+  }
+
+  if (pickupMapLocation) {
+    mapCenterCoords = pickupMapLocation;
+  } else if (destinationMapLocation) {
+    mapCenterCoords = destinationMapLocation;
+  }
+
   // Delegate searching and selection to the hook; edits also invalidate the pair
   // synchronously so a queued provider press cannot use an old confirmation.
   const fieldState = (
     field: AddressAutocompleteState,
+    type: "pickup" | "destination",
   ): AddressAutocompleteState => ({
     ...field,
     onChangeText: (text) => {
@@ -96,22 +137,43 @@ export default function HomeScreen() {
     },
     selectSuggestion: (location) => {
       invalidateConfirmation();
+      if (type == "pickup") {
+        setPickupMarker(null);
+      } else {
+        setDestinationMarker(null);
+      }
       field.selectSuggestion(location);
     },
   });
 
   const handleConfirm = () => {
     if (handoffInProgress.current || confirmedRef.current) return;
-    if (!pickup.selectedLocation || !destination.selectedLocation) {
+
+    let pickupLocation: Location | null = null;
+    let destinationLocation: Location | null = null;
+
+    if (pickupMarker) {
+      pickupLocation = pickupMarker;
+    } else if (pickup.selectedLocation) {
+      pickupLocation = pickup.selectedLocation;
+    }
+
+    if (destinationMarker) {
+      destinationLocation = destinationMarker;
+    } else if (destination.selectedLocation) {
+      destinationLocation = destination.selectedLocation;
+    }
+
+    if (!pickupLocation || !destinationLocation) {
       Alert.alert(
         "Select both locations",
-        "Choose a suggestion for pickup and destination before confirming.",
+        "Choose an address or drag both markers to select your pickup and destination.",
       );
       return;
     }
     const pair = {
-      pickup: pickup.selectedLocation,
-      destination: destination.selectedLocation,
+      pickup: pickupLocation,
+      destination: destinationLocation,
     };
     confirmedRef.current = pair;
     setConfirmed(pair);
@@ -161,28 +223,92 @@ export default function HomeScreen() {
           </Text>
         </View>
         <AddressAutocomplete
-          label="Pickup"
+          label="Pickup (blue)"
           placeholder="Enter a pickup address"
-          autocomplete={fieldState(pickup)}
+          autocomplete={fieldState(pickup, "pickup")}
         />
         <AddressAutocomplete
-          label="Destination"
+          label="Destination (red)"
           placeholder="Enter a destination address"
-          autocomplete={fieldState(destination)}
+          autocomplete={fieldState(destination, "destination")}
         />
+
+        {mapCenterCoords && (
+          <View>
+            <Text style={styles.mapTitle}>Adjust your ride locations</Text>
+
+            <MapView
+              style={styles.map}
+              initialRegion={{
+                latitude: mapCenterCoords.latitude,
+                longitude: mapCenterCoords.longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }}
+              showsUserLocation={true}
+              toolbarEnabled={false}
+            >
+              {pickupMapLocation && (
+                <Marker
+                  coordinate={{
+                    latitude: pickupMapLocation.latitude,
+                    longitude: pickupMapLocation.longitude,
+                  }}
+                  title="Pickup"
+                  pinColor="blue"
+                  draggable
+                  onDragEnd={(event) => {
+                    invalidateConfirmation();
+
+                    setPickupMarker({
+                      formattedAddress: "Pickup location",
+                      latitude: event.nativeEvent.coordinate.latitude,
+                      longitude: event.nativeEvent.coordinate.longitude,
+                    });
+
+                    pickup.onChangeText("");
+                  }}
+                />
+              )}
+
+              {destinationMapLocation && (
+                <Marker
+                  coordinate={{
+                    latitude: destinationMapLocation.latitude,
+                    longitude: destinationMapLocation.longitude,
+                  }}
+                  title="Destination"
+                  pinColor="red"
+                  draggable
+                  onDragEnd={(event) => {
+                    invalidateConfirmation();
+
+                    setDestinationMarker({
+                      formattedAddress: "Dropoff location",
+                      latitude: event.nativeEvent.coordinate.latitude,
+                      longitude: event.nativeEvent.coordinate.longitude,
+                    });
+
+                    destination.onChangeText("");
+                  }}
+                />
+              )}
+            </MapView>
+          </View>
+        )}
 
         <Pressable
           accessibilityRole="button"
           accessibilityState={{
             disabled:
-              !pickup.selectedLocation ||
-              !destination.selectedLocation ||
+              (!pickup.selectedLocation && !pickupMarker) ||
+              (!destination.selectedLocation && !destinationMarker) ||
               !!confirmed ||
               openingProvider,
           }}
           disabled={
-            !pickup.selectedLocation ||
-            !destination.selectedLocation ||
+            (!pickup.selectedLocation && !pickupMarker) ||
+            (!destination.selectedLocation && !destinationMarker) ||
             !!confirmed ||
             openingProvider
           }
@@ -190,8 +316,8 @@ export default function HomeScreen() {
           style={({ pressed }) => [
             styles.action,
             styles.confirmAction,
-            (!pickup.selectedLocation ||
-              !destination.selectedLocation ||
+            ((!pickup.selectedLocation && !pickupMarker) ||
+              (!destination.selectedLocation && !destinationMarker) ||
               !!confirmed ||
               openingProvider) &&
               styles.disabledAction,
@@ -201,8 +327,8 @@ export default function HomeScreen() {
           <Text
             style={[
               styles.actionLabel,
-              (!pickup.selectedLocation ||
-                !destination.selectedLocation ||
+              ((!pickup.selectedLocation && !pickupMarker) ||
+                (!destination.selectedLocation && !destinationMarker) ||
                 !!confirmed ||
                 openingProvider) &&
                 styles.disabledLabel,
@@ -290,8 +416,14 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  keyboard: { flex: 1, backgroundColor: "#FAF8FC", paddingTop: 15 },
-  scroll: { flex: 1 },
+  keyboard: {
+    flex: 1,
+    backgroundColor: "#FAF8FC",
+    paddingTop: 15,
+  },
+  scroll: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
     padding: 16,
@@ -302,9 +434,31 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     alignSelf: "center",
   },
-  header: { gap: 4, marginBottom: 2 },
-  title: { color: "#35244F", fontSize: 24, fontWeight: "700" },
-  subtitle: { color: "#60646C", fontSize: 15, lineHeight: 22 },
+  header: {
+    gap: 4,
+    marginBottom: 2,
+  },
+  title: {
+    color: "#35244F",
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  subtitle: {
+    color: "#60646C",
+    fontSize: 15,
+    lineHeight: 22,
+  },
+
+  mapTitle: {
+    color: "#222",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  map: {
+    width: "100%",
+    height: 280,
+    borderRadius: 12,
+  },
   action: {
     minHeight: 52,
     paddingHorizontal: 20,
@@ -319,27 +473,42 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
-  confirmAction: { backgroundColor: "#6750A4" },
-  uberAction: { backgroundColor: "#161616" },
-  lyftAction: { backgroundColor: "#9b147d" },
-  disabledAction: { backgroundColor: "#E0E1E6" },
-  disabledLabel: { color: "#60646C" },
-  pressedAction: { opacity: 0.75 },
-  providers: { gap: 10 },
-  confirmedTitle: { color: "#222", fontSize: 17, fontWeight: "600" },
-  detailsToggle: {
-    minHeight: 48,
-    justifyContent: "center",
-    alignItems: "center",
+  confirmAction: {
+    backgroundColor: "#6750A4",
   },
-  detailsLabel: { color: "#6750A4", fontSize: 14 },
+  uberAction: {
+    backgroundColor: "#161616",
+  },
+  lyftAction: {
+    backgroundColor: "#9b147d",
+  },
+  disabledAction: {
+    backgroundColor: "#E0E1E6",
+  },
+  disabledLabel: {
+    color: "#60646C",
+  },
+  pressedAction: {
+    opacity: 0.75,
+  },
+  providers: {
+    gap: 10,
+  },
+  confirmedTitle: {
+    color: "#222",
+    fontSize: 17,
+    fontWeight: "600",
+  },
   details: {
     padding: 12,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
   },
-  selected: { color: "#444", marginVertical: 4 },
+  selected: {
+    color: "#444",
+    marginVertical: 4,
+  },
   confirmed: {
     padding: 12,
     gap: 4,
