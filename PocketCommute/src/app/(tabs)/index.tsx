@@ -14,8 +14,8 @@ import {
   ActivityIndicator,
   Menu,
 } from "react-native-paper";
-import { useState, useEffect, useRef, useMemo } from "react";
-import { useRouter } from "expo-router";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
 
 import * as Location from "expo-location";
 
@@ -32,37 +32,29 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [preferences, setPreferences] = useState(false);
   const [mode, setMode] = useState("DRIVE");
-  //const [priority, setPriority] = useState("time");
   const [isDriving, setIsDriving] = useState(true);
   const [avoidHighways, setAvoidHighways] = useState(false);
   const [avoidTolls, setAvoidTolls] = useState(false);
   const showPreferences = () => setPreferences(true);
   const hidePreferences = () => setPreferences(false);
-
   const [currentLocation, setCurrentLocation] =
     useState<Location.LocationObject | null>(null);
-
   const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
   const [loadingLocationAndNearbyPlaces, setLoadingLocationAndNearbyPlaces] =
     useState<boolean>(false);
-
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const [destination, setDestination] = useState<Coordinate | null>(null);
-
   const [errorMessage, setErrorMessage] = useState<string>("");
-
   const router = useRouter();
-
   const [openRanksDropdown, setOpenRanksDropdown] = useState<string | null>(
     null,
   );
-
   const [timePriorityRank, setTimePriorityRank] = useState(1);
   const [distancePriorityRank, setDistancePriorityRank] = useState(2);
   const [fuelPriorityRank, setFuelPriorityRank] = useState(3);
   const [directionsPriorityRank, setDirectionsPriorityRank] = useState(4);
+  const [markerKey, setMarkerKey] = useState(0);
 
   //updates the factors priority rankings by swapping the ranks of the involved the factors
   function updatePriorityRank(
@@ -149,6 +141,12 @@ export default function App() {
       if (timer.current) clearTimeout(timer.current);
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setMarkerKey((key) => key + 1);
+    }, []),
+  );
 
   const placeNearbyPlacesMarkers = useMemo(
     () =>
@@ -553,6 +551,7 @@ export default function App() {
           {placeNearbyPlacesMarkers}
 
           <Marker
+            key={markerKey}
             coordinate={destination ?? currentLocation.coords}
             draggable
             pinColor="blue"

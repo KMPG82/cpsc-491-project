@@ -94,9 +94,9 @@ export async function getHereRoute(
     // console.log("HERE API response time: ", responseTime.toFixed(2));
 
     // console.log("HERE route data: ", hereRouteData.routes);
-    retrievedRoute = hereRouteData.routes;
+    retrievedRoute = hereRouteData.routes ?? [];
 
-    setHereRoute(retrievedRoute[0]);
+    setHereRoute(retrievedRoute[0] ?? null);
     setRetrievingHereRoute(false);
   } catch (error) {
     console.log("HERE route retrieval was unsuccessful.", error);

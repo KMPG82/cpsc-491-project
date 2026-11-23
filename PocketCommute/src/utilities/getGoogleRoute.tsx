@@ -89,7 +89,7 @@ export async function getGoogleRoute(
       const googleRouteData = await response.json();
 
       //console.log("route data: ", googleRouteData.routes);
-      retrievedRoute = googleRouteData.routes;
+      retrievedRoute = googleRouteData.routes ?? [];
     } else {
       const response = await fetch(
         "https://routes.googleapis.com/directions/v2:computeRoutes",
@@ -138,7 +138,7 @@ export async function getGoogleRoute(
     // const responseTime = endTime - startTime;
     // console.log("Google API response time: ", responseTime.toFixed(2));
 
-    setGoogleRoute(retrievedRoute[0]);
+    setGoogleRoute(retrievedRoute[0] ?? null);
     setRetrievingGoogleRoute(false);
   } catch (error) {
     console.log("Google route retrieval was unsuccessful.", error);
