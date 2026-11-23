@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
   Menu,
 } from "react-native-paper";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "expo-router";
 
 import * as Location from "expo-location";
@@ -144,6 +144,47 @@ export default function App() {
     }
   }, [isDriving]);
 
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  const placeNearbyPlacesMarkers = useMemo(
+    () =>
+      nearbyPlaces.map((place, index) => {
+        const latitude = place.properties.lat;
+        const longitude = place.properties.lon;
+        const name = place.properties.name;
+        const address = place.properties.address_line2;
+
+        if (!latitude || !longitude || !name?.trim() || !address?.trim()) {
+          return null;
+        }
+
+        return (
+          <Marker
+            key={index}
+            coordinate={{
+              latitude: latitude,
+              longitude: longitude,
+            }}
+            title={name}
+            description={address}
+            tracksViewChanges={false}
+            onPress={() => {
+              setDestination({
+                latitude: place.properties.lat,
+                longitude: place.properties.lon,
+              });
+              setSearch(name);
+            }}
+          />
+        );
+      }),
+    [nearbyPlaces],
+  );
+
   //show error message if any occur during API requests
   if (errorMessage) {
     return (
@@ -167,6 +208,9 @@ export default function App() {
     );
   }
 
+  const visibleSuggestions = suggestions.filter((suggestion) =>
+    suggestion.properties.name?.trim(),
+  );
   //show map with markers for nearby places, search bar, preferences button, and confirm button
   return (
     <PaperProvider>
@@ -189,6 +233,11 @@ export default function App() {
                 }
 
                 timer.current = setTimeout(() => {
+                  if (text.trim().length < 3) {
+                    setSuggestions([]);
+                    return;
+                  }
+
                   getSuggestions(
                     setSuggestions,
                     text,
@@ -201,37 +250,36 @@ export default function App() {
               value={search}
             />
 
-            {suggestions.length > 0 && (
+            {visibleSuggestions.length > 0 && (
               <View style={styles.suggestionsContainer}>
-                {suggestions
-                  .filter((suggestion) => suggestion.properties.name?.trim())
-                  .map((suggestion, index) => (
-                    <Pressable
-                      key={index}
-                      style={[
-                        styles.lastSuggestion,
-                        index !== suggestions.length - 1 && styles.suggestion,
-                      ]}
-                      onPress={() => {
-                        setDestination({
-                          latitude: suggestion.geometry.coordinates[1],
-                          longitude: suggestion.geometry.coordinates[0],
-                        });
+                {visibleSuggestions.map((suggestion, index) => (
+                  <Pressable
+                    key={index}
+                    style={[
+                      styles.lastSuggestion,
+                      index !== visibleSuggestions.length - 1 &&
+                        styles.suggestion,
+                    ]}
+                    onPress={() => {
+                      setDestination({
+                        latitude: suggestion.geometry.coordinates[1],
+                        longitude: suggestion.geometry.coordinates[0],
+                      });
 
-                        setSearch(suggestion.properties.name || "");
+                      setSearch(suggestion.properties.name || "");
 
-                        setSuggestions([]);
-                      }}
-                    >
-                      <Text variant="bodyLarge">
-                        {suggestion.properties.name}
-                      </Text>
+                      setSuggestions([]);
+                    }}
+                  >
+                    <Text variant="bodyLarge">
+                      {suggestion.properties.name}
+                    </Text>
 
-                      <Text variant="bodySmall">
-                        {suggestion.properties.address_line2}
-                      </Text>
-                    </Pressable>
-                  ))}
+                    <Text variant="bodySmall">
+                      {suggestion.properties.address_line2}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
             )}
           </View>
@@ -502,41 +550,7 @@ export default function App() {
           showsUserLocation={true}
           toolbarEnabled={false}
         >
-          {nearbyPlaces &&
-            nearbyPlaces.map((place, index) => {
-              const latitude = place.properties.lat;
-              const longitude = place.properties.lon;
-              const name = place.properties.name;
-              const address = place.properties.address_line2;
-
-              if (
-                !latitude ||
-                !longitude ||
-                !name?.trim() ||
-                !address?.trim()
-              ) {
-                return null;
-              }
-
-              return (
-                <Marker
-                  key={index}
-                  coordinate={{
-                    latitude: latitude,
-                    longitude: longitude,
-                  }}
-                  title={name}
-                  description={address}
-                  onPress={() => {
-                    setDestination({
-                      latitude: place.properties.lat,
-                      longitude: place.properties.lon,
-                    });
-                    setSearch(name);
-                  }}
-                />
-              );
-            })}
+          {placeNearbyPlacesMarkers}
 
           <Marker
             coordinate={destination ?? currentLocation.coords}

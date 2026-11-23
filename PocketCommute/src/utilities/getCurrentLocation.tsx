@@ -24,6 +24,7 @@ export async function getCurrentLocation(
     });
 
     setLocation(location);
+    setLoadingLocationAndNearbyPlaces(false);
 
     await getNearbyPlaces(
       location.coords.latitude,
