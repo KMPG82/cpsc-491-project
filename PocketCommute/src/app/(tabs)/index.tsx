@@ -581,6 +581,8 @@ const styles = StyleSheet.create({
   },
   preferencesModal: {
     height: "70%",
+    borderWidth: 1,
+    borderColor: "gray",
   },
   preferencesContainer: {
     flexDirection: "row",
