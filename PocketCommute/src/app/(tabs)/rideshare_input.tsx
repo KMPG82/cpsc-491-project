@@ -219,7 +219,7 @@ export default function rideshare() {
         <View style={styles.header}>
           <Text style={styles.title}>Rideshare</Text>
           <Text style={styles.subtitle}>
-            Select your pickup and destination.
+            Select your pickup and destination locations.
           </Text>
         </View>
         <AddressAutocomplete
@@ -235,7 +235,7 @@ export default function rideshare() {
 
         {mapCenterCoords && (
           <View>
-            <Text style={styles.mapTitle}>Adjust your ride locations</Text>
+            <Text style={styles.mapTitle}>Select or adjust your locations</Text>
 
             <MapView
               style={styles.map}
