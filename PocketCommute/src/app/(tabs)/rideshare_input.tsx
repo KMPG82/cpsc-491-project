@@ -219,7 +219,7 @@ export default function rideshare() {
         <View style={styles.header}>
           <Text style={styles.title}>Rideshare</Text>
           <Text style={styles.subtitle}>
-            Select your pickup and destination locations.
+            Select your pickup and drop-off locations.
           </Text>
         </View>
         <AddressAutocomplete
@@ -228,7 +228,7 @@ export default function rideshare() {
           autocomplete={fieldState(pickup, "pickup")}
         />
         <AddressAutocomplete
-          label="Destination (red)"
+          label="Drop-off (red)"
           placeholder="Enter a destination address"
           autocomplete={fieldState(destination, "destination")}
         />
@@ -277,7 +277,7 @@ export default function rideshare() {
                     latitude: destinationMapLocation.latitude,
                     longitude: destinationMapLocation.longitude,
                   }}
-                  title="Destination"
+                  title="Drop-off"
                   pinColor="red"
                   draggable
                   onDragEnd={(event) => {
